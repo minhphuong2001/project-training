@@ -1,0 +1,19 @@
+.icon-person {
+    position: relative;
+}
+
+.icon-person:hover .sub {
+    display: block!important;
+}
+.sub {
+    display: none;
+    position: absolute;
+    background-color: pink;
+    color: #000;
+    top: 30px;
+    right: 0;
+    width: 300px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: all 0.75s;
+}

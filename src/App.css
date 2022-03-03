@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200;300;400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  font-family: 'Oswald', sans-serif;
+}
+
+a {
+  text-decoration: none;
+}
+
+li {
+  list-style: none;
+}
+
+.home-container {
+  background-color: #1b1b38;
+  padding-top: 100px;
+  padding-left: 270px;
+  padding-right: 30px;
+}
+.MuiTableCell-root {
+  color: #fff!important;
+}
+.css-kpr2he-MuiButtonBase-root-MuiPaginationItem-root.Mui-selected {
+  color: #fff!important;
+}
+.css-kpr2he-MuiButtonBase-root-MuiPaginationItem-root {
+  color: #fff!important;
+}

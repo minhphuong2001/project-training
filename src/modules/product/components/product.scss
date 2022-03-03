@@ -1,0 +1,47 @@
+.input {
+    background-color: #fff;
+    color: #000;
+    box-shadow: #1a1f33 0px 8px 16px 0px;
+    padding: 8px 10px;
+    width: 80px;
+    border: 1px solid #323259;
+}
+
+.input:hover {
+    outline: none;
+}
+.input:focus {
+    outline: 1px solid #b18aff;
+}
+.label {
+    padding: 5px 30px;
+    height: 20px;
+    transition: 0.15s ease-in-out;
+}
+.label:hover {
+    background-color: #b18aff;
+    color: #fff;
+}
+
+// add product page
+.input-item {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+
+    .label-name {
+        display: flex;
+        color: #fff;
+        flex-basis: 40%;
+        font-size: 15px;
+        margin: 0px 0px 8px;
+        padding: 4px 15px;
+        text-align: right;
+        font-family: 'Oswald', sans-serif;
+
+        .star {
+            color: red;
+            margin-left: 3px;
+        }
+    }
+}
