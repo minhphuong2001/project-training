@@ -4,30 +4,34 @@ import InputField from '../../../components/FormField/InputField'
 import { SelectField } from '../../../components/FormField/SelectField';
 import { Box } from '@mui/system';
 import { useForm } from 'react-hook-form';
-
-const categoryOption = [
-    {
-        id: 'Mobile',
-        name: 'Mobile'
-    },
-    {
-        id: 'Laptop',
-        name: 'Laptop'
-    },
-]
+import { useSelector } from 'react-redux'
+import { AppState } from '../../../redux/reducer'
 
 const statusOption = [
     {
-        id: 'Pending',
-        name: 'Pending'
+        id: 'all',
+        name: 'Any stock status'
     },
     {
-        id: 'Received',
-        name: 'Received'
+        id: 'in',
+        name: 'In stock'
+    },
+    {
+        id: 'low',
+        name: 'Low stock'
+    },
+    {
+        id: 'out',
+        name: 'SOLD'
     },
 ]
 
-export default function ProductSearch() {
+export interface ProductSearchProps {
+    onSearch: (data: any) => void;
+}
+
+export default function ProductSearch({ onSearch }: ProductSearchProps) {
+    const { categories } = useSelector((state: AppState) => state.category);
     const { control, handleSubmit } = useForm({
         defaultValues: {
             search: '',
@@ -35,9 +39,9 @@ export default function ProductSearch() {
             status: ''
         },
     });
+    
     const handleSearch = (data: any) => {
-        console.log(data);
-        
+        onSearch(data);
     }
 
     return (
@@ -60,7 +64,8 @@ export default function ProductSearch() {
                             name='category'
                             label='Category'
                             control={control}
-                            options={categoryOption}
+                            options={categories}
+                            other={{ id: '0', name: 'Any category' }}
                         />
                     </Grid>
                     <Grid item md={3}>

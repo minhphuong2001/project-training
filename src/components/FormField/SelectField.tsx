@@ -14,9 +14,10 @@ interface SelectFieldProps extends InputHTMLAttributes<HTMLInputElement> {
     disabled?: boolean;
     options: SelectOptions[];
     style?: any;
+    other?: SelectOptions;
 }
 
-export function SelectField({ name, control, label, disabled, options, style }: SelectFieldProps) {
+export function SelectField({ name, control, label, disabled, options, style, other }: SelectFieldProps) {
     const {
         field: { value, onChange, onBlur },
         fieldState: { invalid, error },
@@ -31,15 +32,17 @@ export function SelectField({ name, control, label, disabled, options, style }: 
             disabled={disabled}
             error={invalid}
         >
-            <InputLabel id="filterByCity">{label}</InputLabel>
+            <InputLabel id="demo-simple-select-label">{label}</InputLabel>
             <Select
-                labelId="filterByCity"
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
                 label={label}
                 value={value}
                 onChange={onChange}
                 onBlur={onBlur}
                 sx={style}
             >
+                <MenuItem value={other?.id}>{other?.name}</MenuItem>
                 {
                     options.map(option => {
                         return (

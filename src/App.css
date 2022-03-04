@@ -23,6 +23,7 @@ li {
   padding-top: 100px;
   padding-left: 270px;
   padding-right: 30px;
+  height: 100%;
 }
 .MuiTableCell-root {
   color: #fff!important;
@@ -32,4 +33,17 @@ li {
 }
 .css-kpr2he-MuiButtonBase-root-MuiPaginationItem-root {
   color: #fff!important;
+}
+
+/* sort table */
+.ascending::after {
+  content: '↓';
+  display: inline-block;
+  margin-left: 5px;
+}
+
+.descending::after {
+  content: '↑';
+  display: inline-block;
+  margin-left: 5px;
 }

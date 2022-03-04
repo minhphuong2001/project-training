@@ -25,7 +25,7 @@ export default function ProductPage() {
         const response = await dispatch(fetchThunk(API_PATHS.productList, 'get'));
         
         setIsLoading(false);
-        dispatch(setProductData(response?.data));
+        dispatch(setProductData(response));
     }, [dispatch])
 
     useEffect(() => {
@@ -33,7 +33,7 @@ export default function ProductPage() {
     }, [getProductList])
 
     useEffect(() => {
-        setProductList([...products]);
+        setProductList([...products?.data]);
     }, [products])
 
     const getCategoryList = useCallback(async () => {
@@ -48,13 +48,22 @@ export default function ProductPage() {
         getCategoryList();
     }, [getCategoryList])
 
+    const onSearch = useCallback(async (data: any) => {
+        setIsLoading(true);
+        const response = await dispatch(fetchThunk(API_PATHS.productList, 'post', data));
+
+        setIsLoading(false);
+        dispatch(setProductData(response));
+    }, [dispatch])
+
     return (
         <Box>
             <Typography mb={2} variant='h5' sx={{ color: '#fff' }} >
                 Products
             </Typography>
             {/* search product */}
-            <ProductSearch />
+            <ProductSearch onSearch={onSearch}/>
+
             <Button
                 variant='contained'
                 color='secondary'
@@ -64,6 +73,7 @@ export default function ProductPage() {
                 add product
             </Button>
             {/* product table */}
+
             {
                 isLoading ? <Box style={{
                     display: 'flex',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { ChangeEvent, useState } from 'react'
 import { Box } from '@mui/system'
 import InputField from '../../../components/FormField/InputField'
 import { useForm } from 'react-hook-form'
@@ -30,7 +30,6 @@ import { IProductDetail } from '../../../models/product';
 import { numberFormat } from '../../../utils/common';
 import { useSelector } from 'react-redux';
 import { AppState } from '../../../redux/reducer';
-import moment from 'moment';
 
 export interface ProductDetailProps {
     product: IProductDetail;
@@ -70,6 +69,7 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
     const { categories } = useSelector((state: AppState) => state.category);
     const { shippings } = useSelector((state: AppState) => state.shipping);
     const [categoryData, setCategoryData] = React.useState<string[]>([]);
+    const [showSaleCheckbox, setShowSaleCheckbox] = useState(false);
 
     const handleChange = (event: SelectChangeEvent<typeof categoryData>) => {
         const {
@@ -79,6 +79,14 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
             typeof value === 'string' ? value.split(',') : value,
         );
     };
+
+    const handleChangeSaleCheckbox = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked === true) {
+            setShowSaleCheckbox(true);
+        } else {
+            setShowSaleCheckbox(false);
+        }
+    }
 
     return (
         <div>
@@ -218,7 +226,7 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                 <div className="input-item">
                     <p className='label-name'>Tax class</p>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginLeft: '-60px'}}>
-                        <Typography mr={32} sx={{ color: '#fff' }}>Default</Typography>
+                        <Typography mr={16} sx={{ color: '#fff' }}>Default</Typography>
                         <FormGroup>
                             <FormControlLabel control={<Checkbox />} label="Tax Exempt" sx={{ color: '#fff' }} />
                         </FormGroup>
@@ -227,9 +235,8 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
 
                 <div className='input-item'>
                     <p className='label-name'>Price <span className='star'><sup>*</sup></span></p>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginLeft: '-60px'}}>
-                        <FormControl sx={{ width: '264px', color: '#fff', backgroundColor: '#323259', marginRight: '36px' }} size='small' variant='outlined'>
-                            <InputLabel htmlFor="filled-adornment-amount">Amount</InputLabel>
+                    <Box sx={{ flex: 1, display: 'flex', marginLeft: '-60px'}}>
+                        <FormControl sx={{ width: '150px', color: '#fff', backgroundColor: '#323259', marginRight: '20px' }} size='small' variant='outlined'>
                             <FilledInput
                                 id="filled-adornment-amount"
                                 size='small'
@@ -239,9 +246,24 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                             />
                         </FormControl>
                         <FormGroup>
-                            <FormControlLabel control={<Checkbox />} label="Sale" sx={{ color: '#fff' }} />
+                            <FormControlLabel
+                                control={<Checkbox onChange={handleChangeSaleCheckbox} />}
+                                label="Sale"
+                                sx={{ color: '#fff' }}
+                            />
                         </FormGroup>
                     </Box>
+                    {
+                        showSaleCheckbox ? <FormControl sx={{ width: '150px', color: '#fff', backgroundColor: '#323259' }} size='small' variant='outlined'>
+                            <FilledInput
+                                id="filled-adornment-amount"
+                                size='small'
+                                type='number'
+                                value={0}
+                                startAdornment={<InputAdornment position='end'>$</InputAdornment>}
+                            />
+                        </FormControl> : null
+                    } 
                 </div>
 
                 <div style={{ marginTop: '20px'}}>
