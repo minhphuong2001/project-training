@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Box } from '@mui/system'
 import InputField from '../../../components/FormField/InputField'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import {
   Typography,
   FormGroup,
@@ -24,31 +24,75 @@ import { useHistory } from 'react-router';
 import { ROUTES } from '../../../configs/routes';
 import UploadImage from '../../../components/UploadImage/UploadImage';
 import CustomToggle from '../../../components/FormField/CustomToggle/CustomToggle';
-import { useDispatch } from 'react-redux';
-import { ThunkDispatch } from 'redux-thunk';
+import { useSelector } from 'react-redux';
 import { AppState } from '../../../redux/reducer';
-import { Action } from 'typesafe-actions';
-import { fetchThunk } from '../../common/redux/thunk';
-import { API_PATHS } from '../../../configs/api';
-import { setShippingData } from '../redux/shippingReducer';
+import * as Yup from 'yup'
+import { yupResolver } from '@hookform/resolvers/yup'
+import EditDocument from '../../../components/EditDocument';
+
+const initialValue = {
+  vendors: '',
+  name: '',
+  brand: '',
+  condition: '',
+  sku: '1646235088515',
+  categories: '',
+  images: [],
+  description: '',
+  memberships: '',
+  meta: '',
+  meta_description: '',
+  meta_keywords: '',
+  tax_exempt: 0,
+  zone: '',
+  product_page_title: '',
+  quantity: 0,
+  price: 0.0000,
+  sale_price: 0.0000,
+  arriveDate: new Date(),
+  shipping: 0.0000,
+  facebook_marketing_enabled: 0,
+  google_feed_enabled: 0,
+}
 
 export default function AddProductPage() {
   const history = useHistory();
-  const { control } = useForm();
-  const dispatch = useDispatch<ThunkDispatch<AppState, null, Action<string>>>();
-  const [date, setDate] = useState<Date | string>(new Date());
+  const { brands } = useSelector((state: AppState) => state.brand);
+  const { categories } = useSelector((state: AppState) => state.category);
+  const [showSaleCheckbox, setShowSaleCheckbox] = useState(false);
 
-  const getShippingList = useCallback(async () => {
-    const response = await dispatch(fetchThunk(API_PATHS.shipping, 'get'));
-    
-    if (response?.success === true) {
-      dispatch(setShippingData(response?.data));
+  const validationSchema = Yup.object().shape({
+    vendors: Yup.string()
+      .required('This field is required.'),
+    name: Yup.string()
+      .required('This field is required.'),
+    brand: Yup.string()
+      .required('This field is required.'),
+    condition: Yup.string()
+      .required('This field is required.'),
+    sku: Yup.string()
+      .required('This field is required.'),
+    categories: Yup.string()
+      .required('This field is required.'),
+  });
+  
+  const { control, handleSubmit } = useForm({
+    defaultValues: initialValue,
+    resolver: yupResolver(validationSchema),
+    mode: 'all'
+  });
+
+  const handleChangeSaleCheckbox = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked === true) {
+      setShowSaleCheckbox(true);
+    } else {
+      setShowSaleCheckbox(false);
     }
-  }, [dispatch])
+  }
 
-  useEffect(() => {
-    getShippingList();
-  }, [getShippingList])
+  const onSubmit = (data: any) => {
+    console.log(data);
+  }
 
   return (
     <div>
@@ -91,7 +135,7 @@ export default function AddProductPage() {
           <div className='input-item'>
             <p className='label-name'>Product Title <span className='star'><sup>*</sup></span></p>
             <InputField
-              name='productTitle'
+              name='name'
               label='Product Title'
               control={control}
               style={{color: '#fff', backgroundColor: '#323259', flex: 1 }}
@@ -104,7 +148,7 @@ export default function AddProductPage() {
               name='brand'
               label='Brand'
               control={control}
-              options={[{ id: 'used', name: 'Used' }]}
+              options={brands}
               style={{ color: '#fff', backgroundColor: '#323259', flex: 1 }}
             />
           </div>
@@ -124,8 +168,6 @@ export default function AddProductPage() {
             <p className='label-name'>SKU <span className='star'><sup>*</sup></span></p>
             <InputField
               name='sku'
-              // label='SKU'
-              value='1646235088515'
               control={control}
               style={{color: '#fff', backgroundColor: '#323259', flex: 1 }}
             />
@@ -133,28 +175,36 @@ export default function AddProductPage() {
           {/* images */}
           <div className="input-item">
             <p className='label-name'>Image <span className='star'><sup>*</sup></span></p>
-            <UploadImage />
+            <Controller
+              render={() => <UploadImage />}
+              name='images'
+              control={control}
+            />
           </div>
     
           <div className='input-item'>
             <p className='label-name'>Category <span className='star'><sup>*</sup></span></p>
             <SelectField
-              name='category'
+              name='categories'
               label='Category'
               control={control}
-              options={[{ id: 'used', name: 'Used' }]}
+              options={categories}
               style={{ color: '#fff', backgroundColor: '#323259', flex: 1 }}
             />
           </div>
 
           <div className="input-item">
             <p className='label-name'>Description <span className='star'><sup>*</sup></span></p>
-
+            <Controller
+              name='description'
+              control={control}
+              render={({ field }) => <EditDocument title={field.value} setTitle={(e) => field.onChange(e)} />}
+            />
           </div>
 
           <div className="input-item">
             <p className='label-name'>Available for sale</p>
-            <CustomToggle />
+            <CustomToggle value='1' />
           </div>
         </Box>
       </Box>
@@ -177,10 +227,10 @@ export default function AddProductPage() {
           <div className='input-item'>
             <p className='label-name'>Member ship</p>
             <SelectField
-              name='member'
+              name='memberships'
               label='Member ship'
               control={control}
-              options={[{ id: 'used', name: 'Used' }]}
+              options={[{ id: 'general', name: 'General' }]}
               style={{ color: '#fff', backgroundColor: '#323259', flex: 1 }}
             />
           </div>
@@ -188,58 +238,93 @@ export default function AddProductPage() {
           <div className="input-item">
             <p className='label-name'>Tax class</p>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginLeft: '-60px'}}>
-              <Typography mr={32} sx={{ color: '#fff' }}>Default</Typography>
-              <FormGroup>
-                <FormControlLabel control={<Checkbox />} label="Tax Exempt" sx={{ color: '#fff' }} />
-              </FormGroup>
+              <Typography mr={16} sx={{ color: '#fff' }}>Default</Typography>
+              <Controller
+                name='tax_exempt'
+                control={control}
+                render={({ field }) => <FormControlLabel
+                  control={<Checkbox />}
+                  label="Tax Exempt"
+                  sx={{ color: '#fff' }}
+                  {...field}
+                />}
+              />
             </Box>
           </div>  
 
           <div className='input-item'>
             <p className='label-name'>Price <span className='star'><sup>*</sup></span></p>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginLeft: '-60px'}}>
-              <FormControl sx={{ width: '264px', color: '#fff', backgroundColor: '#323259', marginRight: '36px' }} size='small' variant='outlined'>
-                <InputLabel htmlFor="filled-adornment-amount">Amount</InputLabel>
-                <FilledInput
-                  id="filled-adornment-amount"
-                  size='small'
-                  type='number'
-                  // value={values.amount}
-                  // onChange={handleChange('amount')}
-                  startAdornment={<InputAdornment position="start">$</InputAdornment>}
-                />
-              </FormControl>
+            <Box sx={{ flex: 1, display: 'flex', marginLeft: '-60px' }}>
+              <Controller
+                name='price'
+                control={control}
+                render={({ field }) => (
+                  <FormControl sx={{ width: '150px', color: '#fff', backgroundColor: '#323259', marginRight: '20px' }} size='small' variant='outlined'>
+                    <FilledInput
+                      id="filled-adornment-amount"
+                      size='small'
+                      type='number'
+                      startAdornment={<InputAdornment position='end'>$</InputAdornment>}
+                      {...field}
+                    />
+                  </FormControl>
+                )}
+              />
               <FormGroup>
-                <FormControlLabel control={<Checkbox />} label="Sale" sx={{ color: '#fff' }} />
+                <FormControlLabel
+                  control={<Checkbox onChange={handleChangeSaleCheckbox} />}
+                  label="Sale"
+                  sx={{ color: '#fff' }}
+                />
               </FormGroup>
             </Box>
+            {showSaleCheckbox ?
+              <Controller
+                name='sale_price'
+                control={control}
+                render={({ field }) => (
+                  <FormControl sx={{ width: '150px', color: '#fff', backgroundColor: '#323259' }} size='small' variant='outlined'>
+                    <FilledInput
+                      id="filled-adornment-amount"
+                      size='small'
+                      type='number'
+                      startAdornment={<InputAdornment position='end'>$</InputAdornment>}
+                      {...field}
+                    />
+                  </FormControl>
+                )}
+              /> : null} 
           </div>
 
           <div style={{ marginTop: '20px'}}>
             <div className="input-item" >
               <p className='label-name'>Arrival date</p>
-              <LocalizationProvider dateAdapter={AdapterMomentFns}>
-                <DatePicker
-                  label='Date'
-                  value={date}
-                  onChange={(newValue) => setDate(newValue as string)}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      size='small'
-                      fullWidth
-                      sx={{ color: '#fff', backgroundColor: '#323259', marginLeft: 0 }}
-                    />
-                  )}
-                />
-              </LocalizationProvider> 
+              <Controller
+                name='arriveDate'
+                control={control}
+                render={({ field }) => <LocalizationProvider dateAdapter={AdapterMomentFns}>
+                  <DatePicker
+                    label='Date'
+                    value={field.value}
+                    onChange={(e) => field.onChange(e)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        size='small'
+                        fullWidth
+                        sx={{ color: '#fff', backgroundColor: '#323259', marginLeft: 0 }}
+                      />
+                    )}
+                  />
+                </LocalizationProvider>}
+              />
             </div>
           </div>
 
           <div className='input-item'>
             <p className='label-name'>Quanlity in stock <span className='star'><sup>*</sup></span></p>
             <InputField
-              name='quality'
+              name='quantity'
               control={control}
               style={{color: '#fff', backgroundColor: '#323259', flex: 1 }}
             />
@@ -261,17 +346,22 @@ export default function AddProductPage() {
         <Box sx={{ width: '600px', marginLeft: '100px' }}>
           <div className='input-item'>
             <p className='label-name'>Continental U.S. <span className='star'><sup>*</sup></span></p>
-              <FormControl sx={{ color: '#fff', backgroundColor: '#323259' }} fullWidth size='small' variant='outlined'>
-                <InputLabel htmlFor="filled-adornment-amount">Money</InputLabel>
-                <FilledInput
-                  id="filled-adornment-amount"
-                  size='small'
-                  type='number'
-                  // value={values.amount}
-                  // onChange={handleChange('amount')}
-                  startAdornment={<InputAdornment position="start">$</InputAdornment>}
-                />
-              </FormControl>
+            <Controller
+              name='shipping'
+              control={control}
+              render={({ field }) => (
+                <FormControl sx={{ color: '#fff', backgroundColor: '#323259' }} fullWidth size='small' variant='outlined'>
+                  <InputLabel htmlFor="filled-adornment-amount">Money</InputLabel>
+                  <FilledInput
+                    id="filled-adornment-amount"
+                    size='small'
+                    type='number'
+                    startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                    {...field}
+                  />
+                </FormControl>
+              )}
+            />
           </div>
 
           <div className="input-item">
@@ -305,8 +395,8 @@ export default function AddProductPage() {
               name='meta'
               control={control}
               options={[
-                { id: 'autogenerate', name: 'Autogenerate' },
-                { id: 'custom', name: 'Custom' }
+                { id: '1', name: 'Autogenerate' },
+                { id: '2', name: 'Custom' }
               ]}
               style={{ color: '#fff', backgroundColor: '#323259' }}
             />
@@ -315,11 +405,11 @@ export default function AddProductPage() {
           <div className="input-item">
             <p className='label-name'>Meta description</p>
             <SelectField
-              name='metaDesc'
+              name='meta_description'
               control={control}
               options={[
-                { id: 'autogenerate', name: 'Autogenerate' },
-                { id: 'custom', name: 'Custom' }
+                { id: '3', name: 'Autogenerate' },
+                { id: '4', name: 'Custom' }
               ]}
               style={{ color: '#fff', backgroundColor: '#323259' }}
             />
@@ -328,7 +418,7 @@ export default function AddProductPage() {
           <div className='input-item'>
             <p className='label-name'>Meta keywords</p>
             <InputField
-              name='metaKeywords'
+              name='meta_keywords'
               control={control}
               style={{color: '#fff', backgroundColor: '#323259', flex: 1 }}
             />
@@ -337,7 +427,7 @@ export default function AddProductPage() {
           <div className='input-item'>
             <p className='label-name'>Product page title</p>
             <InputField
-              name='productTitle'
+              name='product_page_title'
               control={control}
               style={{color: '#fff', backgroundColor: '#323259', flex: 1 }}
             />
@@ -345,12 +435,20 @@ export default function AddProductPage() {
 
           <div className="input-item">
             <p className='label-name'>Add to Facebook <br /> product feed</p>
-            <CustomToggle />
+            <Controller
+              name='facebook_marketing_enabled'
+              control={control}
+              render={({ field }) => <CustomToggle value={field.value} />}
+            />
           </div>
 
           <div className="input-item">
             <p className='label-name'>Add to Google <br /> product feed</p>
-            <CustomToggle />
+            <Controller
+              name='google_feed_enabled'
+              control={control}
+              render={({ field }) => <CustomToggle value={field.value}/>}
+            />
           </div>
         </Box>
       </Box>
@@ -368,7 +466,11 @@ export default function AddProductPage() {
           width: '100%', 
         }}
       >
-        <Button variant='contained' color='warning'>
+        <Button
+          variant='contained'
+          color='warning'
+          onClick={handleSubmit(onSubmit)}
+        >
           add product
         </Button>
       </Box>

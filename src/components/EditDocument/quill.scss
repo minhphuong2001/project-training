@@ -1,0 +1,41 @@
+.editor {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    max-width: 420px;
+}
+.quillWrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+}
+
+.ql-container {
+    border-bottom-left-radius: 0.5em;
+    border-bottom-right-radius: 0.5em;
+    background: transparent;
+    color: #fff;
+}
+
+/* Snow Theme */
+.ql-snow.ql-toolbar {
+    display: block;
+    background: #f1f1f1;
+    border-top-left-radius: 0.5em;
+    border-top-right-radius: 0.5em;
+}
+
+.ql-bubble .ql-editor {
+    border: 2px solid #323259;
+    border-radius: 0.5em;
+}
+
+.ql-editor {
+    min-height: 16em;
+}
+
+.themeSwitcher {
+    margin-top: 0.5em;
+    font-size: small;
+}

@@ -192,7 +192,7 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
 
                     <div className="input-item">
                         <p className='label-name'>Available for sale</p>
-                        <CustomToggle />
+                        <CustomToggle value='1'/>
                     </div>
                 </Box>
             </Box>

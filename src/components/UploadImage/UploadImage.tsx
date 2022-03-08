@@ -8,7 +8,6 @@ interface UploadImageProps {
 }
 
 export default function UploadImage({ images }: UploadImageProps) {
-
     const [selectImage, setSelectImage] = useState([]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

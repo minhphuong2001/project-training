@@ -16,6 +16,9 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Cookies from 'js-cookie';
 import { ACCESS_TOKEN_KEY } from '../../../utils/constants';
+import { setBrandData } from '../redux/brandReducer';
+import { setShippingData } from '../redux/shippingReducer';
+import axios from 'axios';
 
 export default function ProductPage() {
     const history = useHistory();
@@ -48,6 +51,30 @@ export default function ProductPage() {
         getCategoryList();
     }, [getCategoryList])
 
+    const getBrandList = useCallback(async () => {
+        const response = await dispatch(fetchThunk(API_PATHS.brand, 'get'));
+
+        if (response?.success === true) {
+            dispatch(setBrandData(response?.data));
+        }
+    }, [dispatch]);
+
+    useEffect(() => {
+        getBrandList();
+    }, [getBrandList])
+
+    const getShippingList = useCallback(async () => {
+        const response = await dispatch(fetchThunk(API_PATHS.shipping, 'get'));
+        
+        if (response?.success === true) {
+          dispatch(setShippingData(response?.data));
+        }
+      }, [dispatch])
+    
+      useEffect(() => {
+        getShippingList();
+      }, [getShippingList])
+
     const onSearch = useCallback(async (data: any) => {
         setIsLoading(true);
         const response = await dispatch(fetchThunk(API_PATHS.productList, 'post', data));
@@ -68,42 +95,40 @@ export default function ProductPage() {
         }
     }, [dispatch, products])
 
+    const handleUpdate = async (index: number, values: any) => {
+        try {
+            setIsLoading(true);
+            const formData = new FormData();
+            formData.append('productDetail', `${JSON.stringify({
+                id: values.id,
+                vendor_id: values.vendorID,
+                name: values.name,
+                quantity: values.amount,
+                price: values.price,
+                ...values
+            })}`);
+            const response = await axios.post(`${API_PATHS.productAdmin}/create`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: Cookies.get(ACCESS_TOKEN_KEY) || '',
+                }
+            })
+            const json = await dispatch(fetchThunk(API_PATHS.productList, 'get'));
+
+            setIsLoading(false);
+            if (response.data?.success === true) {
+                dispatch(setProductData(json));
+                toast.success('Update successfully')
+            }
+        } catch (error: any) {
+            console.log(error?.message);
+        }
+    }    
+        
     useEffect(() => {
         setProductList([...products?.data]);
     }, [products])
 
-    const handleUpdate = async (index: number, values: IProductData) => {
-        console.log(values);
-        // const response = await dispatch(fetchThunk(`${API_PATHS.productAdmin}/create`, 'post', formData, true, 'multipart/form-data'));
-        // console.log(response);
-        
-        const formData = new FormData();
-        formData.append('name', 'min')
-        // formData.append('productDetail', {
-        //     id: values.id,
-        //     vendor_id: values.vendorID,
-        //     amount: values.amount,
-        //     price: values.price
-        // });
-        console.log(formData);
-          
-        fetch(`${API_PATHS.productAdmin}/create`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: Cookies.get(ACCESS_TOKEN_KEY) || ''
-            },
-            body: formData
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-            })
-            .catch(error => console.log(error))
-            // toast.success('Update successfully')
-        }
-        
-    
     return (
         <Box>
             <Typography mb={2} variant='h5' sx={{ color: '#fff' }}>

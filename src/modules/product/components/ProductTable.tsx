@@ -38,8 +38,8 @@ interface ProductTableProps {
     onUpdate: (index: number, values: IProductData) => void;
 }
 
-const useSortTable = (items: any) => {
-    const [sortConfig, setSortConfig] = useState<any>(null);
+const useSortTableData = (items: any, config = null) => {
+    const [sortConfig, setSortConfig] = useState<any>(config);
 
     const sortedItem = useMemo(() => {
         const sortableItems = [...items];
@@ -54,6 +54,7 @@ const useSortTable = (items: any) => {
                 return 0;
             })
         }
+
         return sortableItems;
     }, [items, sortConfig]);
 
@@ -74,7 +75,7 @@ function ProductTable({ products, onDelete, onUpdate }: ProductTableProps) {
     const dispatch = useDispatch<ThunkDispatch<AppState, null, Action<string>>>();
     const [rowsPerPage, setRowsPerPage] = useState('10');
     const [showUpdateDialog, setShowUpdateDialog] = useState(false);
-    const { items, requestSort, sortConfig } = useSortTable(products);
+    const { items, requestSort, sortConfig } = useSortTableData(products);
     const { recordsTotal } = useSelector((state: AppState) => state.product.products);
     const [page, setPage] = useState(1);
     const [totalPage, setTotalPage] = useState(10);
@@ -257,7 +258,10 @@ function ProductTable({ products, onDelete, onUpdate }: ProductTableProps) {
                                                             id={item.id as string}
                                                             checked={selected.includes(item.id)}
                                                             onChange={handleClickCheckbox}
-                                                            onClick={() => setIsExported(!isExported)}
+                                                            onClick={() => {
+                                                                setActiveIndex(index);
+                                                                setIsExported(!isExported)
+                                                            }}
                                                         />
                                                         |
                                                         <IconButton
@@ -426,6 +430,7 @@ function ProductTable({ products, onDelete, onUpdate }: ProductTableProps) {
                                             variant='contained'
                                             sx={{ marginRight: '1rem' }}
                                             onClick={() => {
+                                                onUpdate(activeIndex, productItem as IProductData);
                                                 setShowSaveDialog(false)
                                             }}
                                         >
