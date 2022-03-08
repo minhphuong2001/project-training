@@ -1,7 +1,7 @@
 export interface IProductData {
-    id: number;
+    id: number | string;
     sku: string;
-    price: number,
+    price: number|string,
     enabled: number,
     weight: number,
     arrivalDate: Date | string,
@@ -10,7 +10,7 @@ export interface IProductData {
     created: Date | string,
     vendor: string;
     vendorID: number;
-    amount: number;
+    amount: number|string;
     participateSale: number;
     category: string;
     condition: string;
@@ -24,7 +24,7 @@ export interface IProductList {
 }
 
 export interface IProductDetail {
-    id: string;
+    id: number | string;
     vendor_id: string;
     name: string;
     sku: string;

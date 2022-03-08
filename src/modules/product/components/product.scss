@@ -1,32 +1,40 @@
 .input {
     background-color: #fff;
     color: #000;
-    box-shadow: #1a1f33 0px 8px 16px 0px;
+    box-shadow: #7086dd 0px 2px 5px 0px;
     padding: 8px 10px;
     width: 80px;
-    border: 1px solid #323259;
-}
+    border: 1px solid #66afe9;
 
-.input:hover {
-    outline: none;
-}
-.input:focus {
-    outline: 1px solid #b18aff;
+    &:hover {
+        outline: none;
+    }
+
+    &:focus {
+        outline: 1px solid #b18aff;
+    }
 }
 .label {
     padding: 5px 30px;
     height: 20px;
     transition: 0.15s ease-in-out;
+
+    &:hover {
+        background-color: #b18aff;
+        color: #fff;
+    }
 }
-.label:hover {
-    background-color: #b18aff;
-    color: #fff;
+.money-btn {
+    padding: 8px 10px;
+    color: #000;
+    background-color: #fff;
+    box-shadow: #7086dd 0px 2px 8px 0px;
+    border: 1px solid #66afe9;
 }
 
 // add product page
 .input-item {
     display: flex;
-    // align-items: center;
     margin: 10px 0;
 
     .label-name {

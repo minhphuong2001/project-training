@@ -1,5 +1,5 @@
 import { createCustomAction, ActionType, getType } from 'typesafe-actions';
-import { IProductData, IProductList } from './../../../models/product';
+import { IProductList } from './../../../models/product';
 
 export interface ProductState {
     products: IProductList;
@@ -9,6 +9,7 @@ export const setProductData = createCustomAction('products/setProductData', (dat
     data
 }))
 
+ 
 const actions = { setProductData };
 
 type Action = ActionType<typeof actions>;

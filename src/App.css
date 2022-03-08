@@ -47,3 +47,9 @@ li {
   display: inline-block;
   margin-left: 5px;
 }
+
+@media screen and (max-width: 1200px) {
+  .home-container {
+    padding-left: 30px;
+  }
+}

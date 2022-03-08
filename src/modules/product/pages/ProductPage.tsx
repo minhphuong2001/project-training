@@ -12,6 +12,10 @@ import { IProductData } from '../../../models/product';
 import { setProductData } from '../redux/productReducer';
 import { useHistory } from 'react-router';
 import { setCategoryData } from '../redux/categoryReducer';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Cookies from 'js-cookie';
+import { ACCESS_TOKEN_KEY } from '../../../utils/constants';
 
 export default function ProductPage() {
     const history = useHistory();
@@ -31,10 +35,6 @@ export default function ProductPage() {
     useEffect(() => {
         getProductList();
     }, [getProductList])
-
-    useEffect(() => {
-        setProductList([...products?.data]);
-    }, [products])
 
     const getCategoryList = useCallback(async () => {
         const response = await dispatch(fetchThunk(API_PATHS.category, 'get'));
@@ -56,14 +56,62 @@ export default function ProductPage() {
         dispatch(setProductData(response));
     }, [dispatch])
 
+    const handleRemove = useCallback(async (id: any) => {
+        try {
+            setIsLoading(true);
+            await dispatch(fetchThunk(`${API_PATHS.productAdmin}/edit`, 'post', { params: [{ id: id, delete: 1 }] }));
+
+            setIsLoading(false);
+            setProductList([...products.data.filter(a => a.id !== id)]);
+        } catch (error: any) {
+            console.log(error.message);
+        }
+    }, [dispatch, products])
+
+    useEffect(() => {
+        setProductList([...products?.data]);
+    }, [products])
+
+    const handleUpdate = async (index: number, values: IProductData) => {
+        console.log(values);
+        // const response = await dispatch(fetchThunk(`${API_PATHS.productAdmin}/create`, 'post', formData, true, 'multipart/form-data'));
+        // console.log(response);
+        
+        const formData = new FormData();
+        formData.append('name', 'min')
+        // formData.append('productDetail', {
+        //     id: values.id,
+        //     vendor_id: values.vendorID,
+        //     amount: values.amount,
+        //     price: values.price
+        // });
+        console.log(formData);
+          
+        fetch(`${API_PATHS.productAdmin}/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: Cookies.get(ACCESS_TOKEN_KEY) || ''
+            },
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => console.log(error))
+            // toast.success('Update successfully')
+        }
+        
+    
     return (
         <Box>
-            <Typography mb={2} variant='h5' sx={{ color: '#fff' }} >
+            <Typography mb={2} variant='h5' sx={{ color: '#fff' }}>
                 Products
             </Typography>
             {/* search product */}
-            <ProductSearch onSearch={onSearch}/>
-
+            <ProductSearch onSearch={onSearch} />
+            
             <Button
                 variant='contained'
                 color='secondary'
@@ -72,10 +120,10 @@ export default function ProductPage() {
             >
                 add product
             </Button>
-            {/* product table */}
 
-            {
-                isLoading ? <Box style={{
+            {/* product table */}
+            {isLoading ?
+                <Box style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -84,28 +132,22 @@ export default function ProductPage() {
                     <CircularProgress size={48} />
                 </Box> :
                 <>
-                    <ProductTable products={productList} />
-                    <Box
-                        sx={{
-                            backgroundColor: '#323259',
-                            padding: '10px 30px',
-                            position: 'sticky',
-                            bottom: '0px',
-                            boxShadow: '0 0 13px 0 #b18aff',
-                            borderStyle: 'solid',
-                            borderColor:'#323259',
-                            borderImage: 'initial',
-                            zIndex: 2,
-                            width: '100%', 
-                        }}
-                    >
-                        <Button variant='contained' color='warning'>
-                            save changes
-                        </Button>
-                        <Button variant='contained' color='warning' sx={{ marginLeft: '20px' }}>
-                            export all: csv
-                        </Button>
-                    </Box>
+                    <ProductTable
+                        products={productList}
+                        onDelete={handleRemove}
+                        onUpdate={handleUpdate}
+                    />
+                    <ToastContainer
+                        position="top-right"
+                        autoClose={5000}
+                        hideProgressBar={false}
+                        newestOnTop={false}
+                        closeOnClick
+                        rtl={false}
+                        pauseOnFocusLoss
+                        draggable
+                        pauseOnHover
+                    />
                 </>
             }
         </Box>

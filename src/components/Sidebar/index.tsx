@@ -3,19 +3,20 @@ import './sidebar.scss'
 import sidebar_item from './sidebarData'
 import { Link} from 'react-router-dom'
 import { ChevronLeft } from '@mui/icons-material'
-import {ROUTES} from '../../configs/routes' 
+import { ROUTES } from '../../configs/routes' 
+import { KeyboardArrowDown } from '@mui/icons-material'
 interface ListItemProps {
     name: string;
     routeName: string;
 }
 
-interface SidebarProps {
-    active: string;
-    displayName: string;
-    router: string;
-    icon: React.ReactNode;
-    listItem: ListItemProps[];
-}
+// interface SidebarProps {
+//     active: string;
+//     displayName: string;
+//     router: string;
+//     icon: React.ReactNode;
+//     listItem: ListItemProps[];
+// }
 
 const SidebarItem = (props: any) => {
     const active = props.active ? 'active' : '';
@@ -33,7 +34,7 @@ const SidebarItem = (props: any) => {
                     {props.name}
                 </span>
                 {
-                    props.listItem ? <span className="icon-right" onClick={handleOpen}><ChevronLeft/></span> : null
+                    props.listItem ? <span className="icon-right" onClick={handleOpen}>{ open ? <KeyboardArrowDown/> : <ChevronLeft/> }</span> : null
                 }
             </div>
             {
@@ -61,12 +62,21 @@ const SidebarItem = (props: any) => {
     )
 }
 
-export default function Sidebar(props: any) {
-    const activeItem = sidebar_item.findIndex(value => value.route === props?.location.pathname);
-    // const { isOpen, toggle } = props;
+interface SidebarProps {
+    isOpen: boolean;
+    toggle: () => void;
+    location: any;
+}
+
+export default function Sidebar({ isOpen, toggle, location }: SidebarProps) {
+    const activeItem = sidebar_item.findIndex(value => value.route === location?.pathname);
+
 
     return (
-        <div className='sidebar'>
+        <div
+            className={`${isOpen ? 'sidebar active' : 'sidebar'} `}
+            onClick={toggle}
+        > 
             <div className='sidebar-container'>
                 {
                     sidebar_item.map((item, index) => {

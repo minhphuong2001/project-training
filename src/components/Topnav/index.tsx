@@ -7,8 +7,11 @@ import {
 import { Typography } from '@mui/material'
 import { Box } from '@mui/system'
 import './topnav.scss'
+export interface TopnavProps {
+    toggle: () => void;
+}
 
-export default function Topnav() {
+export default function Topnav({ toggle }: TopnavProps) {
     return (
         <div>
             <Box sx={{
@@ -24,7 +27,10 @@ export default function Topnav() {
                 zIndex: 100
             }}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <MenuSharp sx={{ fontSize: 24 }} />
+                    <MenuSharp
+                        sx={{ fontSize: 24 }}
+                        onClick={toggle}
+                    />
                     <Box sx={{
                         display: 'flex',
                         alignItems: 'center',
