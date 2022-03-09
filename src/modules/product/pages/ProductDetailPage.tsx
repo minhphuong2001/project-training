@@ -1,4 +1,5 @@
 import { ArrowBack } from '@mui/icons-material';
+import { CircularProgress } from '@mui/material';
 import { Box } from '@mui/system';
 import React, { useCallback, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,10 +19,13 @@ export default function ProductDetailPage() {
     const dispatch = useDispatch<ThunkDispatch<AppState, null, Action<string>>>();
     const [productDetail, setProductDetail] = useState<IProductDetail>();
     const { brands } = useSelector((state: AppState) => state.brand);
+    const [isLoading, setIsLoading] = useState(false);
     
     const getProductDetail = useCallback(async () => {
+        setIsLoading(true);
         const response = await dispatch(fetchThunk(`${API_PATHS.productAdmin}/detail`, 'post', { id: id }));
 
+        setIsLoading(false);
         if (response?.success === true) {
             setProductDetail(response?.data);
         }
@@ -34,7 +38,7 @@ export default function ProductDetailPage() {
     return (
         <div>
             <Box
-                mb={4}
+                mb={2}
                 sx={{
                     backgroundColor: '#fff',
                     color: '#000',
@@ -49,7 +53,16 @@ export default function ProductDetailPage() {
             >
                 <ArrowBack />
             </Box>
-            <ProductDetail product={productDetail as IProductDetail} brand={brands}/>
+            {isLoading ?
+                <Box style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '80vh'
+                }}>
+                    <CircularProgress size={48} />
+                </Box> : <ProductDetail product={productDetail as IProductDetail} brand={brands} />
+            }
         </div>
     )
 }

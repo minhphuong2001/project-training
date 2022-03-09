@@ -48,6 +48,16 @@ li {
   margin-left: 5px;
 }
 
+.basic-single {
+  width: 100%;
+  z-index: 100;
+  color: #fff;
+}
+.css-qc6sy-singleValue, 
+.select__input-container {
+  color: #fff!important;
+}
+
 @media screen and (max-width: 1200px) {
   .home-container {
     padding-left: 30px;

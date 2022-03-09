@@ -7,6 +7,7 @@ import intlReducer, { IntlState } from '../modules/intl/redux/intlReducer';
 import brandReducer, { BrandState } from '../modules/product/redux/brandReducer';
 import categoryReducer, { CategoryState } from '../modules/product/redux/categoryReducer';
 import shippingReducer, { ShippingState } from '../modules/product/redux/shippingReducer';
+import vendorReducer, { VendorState } from '../modules/user/redux/vendorReducer';
 
 export interface AppState {
   router: RouterState;
@@ -16,6 +17,7 @@ export interface AppState {
   brand: BrandState;
   category: CategoryState;
   shipping: ShippingState;
+  vendor: VendorState;
 }
 
 export default function createRootReducer(history: History) {
@@ -27,5 +29,6 @@ export default function createRootReducer(history: History) {
     brand: brandReducer,
     category: categoryReducer,
     shipping: shippingReducer,
+    vendor: vendorReducer
   });
 }

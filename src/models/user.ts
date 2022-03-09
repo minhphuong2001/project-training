@@ -1,3 +1,6 @@
+import { valuesIn } from "lodash";
+import { StringLocale } from "yup/lib/locale";
+
 export interface AuthToken {
   accessToken: string;
   expiresIn: number;
@@ -19,16 +22,9 @@ export interface IUser  {
   user_cookie: string;
 }
 
-// export interface IUser {
-//   id: number;
-//   email: string;
-//   name: string;
-//   gender: string;
-//   avatar: string;
-//   region: number;
-//   state: number;
-//   description: string;
-//   createdAt: string;
-//   updatedAt: string;
-//   token: string;
-// }
+export interface IVendorData {
+  id: string;
+  companyName: string;
+  login: string;
+  name: string;
+}

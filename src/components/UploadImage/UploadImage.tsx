@@ -5,25 +5,29 @@ import { IImage } from '../../models/product';
 
 interface UploadImageProps {
     images?: IImage[];
+    onChangeImage: (e: any) => void;
+    onRemoveImage: (index: number) => void;
+    selectImage: any[];
 }
 
-export default function UploadImage({ images }: UploadImageProps) {
-    const [selectImage, setSelectImage] = useState([]);
+export default function UploadImage({ images, onChangeImage, onRemoveImage ,selectImage }: UploadImageProps) {
+    // const [selectImage, setSelectImage] = useState([]);
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            const fileArr = Array.from(e.target.files).map(file => URL.createObjectURL(file))
+    // const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     // if (e.target.files) {
+    //     //     const fileArr = Array.from(e.target.files).map(file => URL.createObjectURL(file));
             
-            setSelectImage(prev => prev.concat(fileArr as any));
+    //     //     setSelectImage(prev => prev.concat(fileArr as any));
             
-            Array.from(e.target.files).map(file => URL.createObjectURL(file))
-        }
-    }
+    //     //     Array.from(e.target.files).map(file => URL.createObjectURL(file));
+    //     // }
+    //     onChangeImage(e.target.files);
+    // }
 
-    const handleRemoveImage = (index: number) => {
-        selectImage.splice(index, 1);
-        setSelectImage([...selectImage]);
-    }
+    // const handleRemoveImage = (index: number) => {
+    //     selectImage.splice(index, 1);
+    //     setSelectImage([...selectImage]);
+    // }
 
     return (
         <div className="upload-img">
@@ -43,7 +47,7 @@ export default function UploadImage({ images }: UploadImageProps) {
                         return (
                             <div className="img-item" key={index}>
                                 <img src={item} alt="" />
-                                <Clear className="cancel" onClick={() => handleRemoveImage(index)}/>
+                                <Clear className="cancel" onClick={() => onRemoveImage(index)}/>
                             </div>
                         )
                     })
@@ -58,7 +62,7 @@ export default function UploadImage({ images }: UploadImageProps) {
                         multiple
                         accept=".jpg, .png, .jpeg"
                         style={{ display: 'none' }}
-                        onChange={handleImageChange}
+                        onChange={onChangeImage}
                     />
                 </label>
             </form>

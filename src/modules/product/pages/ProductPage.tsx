@@ -19,6 +19,7 @@ import { ACCESS_TOKEN_KEY } from '../../../utils/constants';
 import { setBrandData } from '../redux/brandReducer';
 import { setShippingData } from '../redux/shippingReducer';
 import axios from 'axios';
+import { setVendors } from '../../user/redux/vendorReducer';
 
 export default function ProductPage() {
     const history = useHistory();
@@ -71,9 +72,21 @@ export default function ProductPage() {
         }
       }, [dispatch])
     
-      useEffect(() => {
+    useEffect(() => {
         getShippingList();
-      }, [getShippingList])
+    }, [getShippingList])
+    
+    const getVendorList = useCallback(async () => {
+        const response = await dispatch(fetchThunk(API_PATHS.vendors, 'get'));
+        
+        if (response?.success === true) {
+          dispatch(setVendors(response?.data));
+        }
+      }, [dispatch])
+    
+    useEffect(() => {
+        getVendorList();
+    }, [getVendorList])
 
     const onSearch = useCallback(async (data: any) => {
         setIsLoading(true);

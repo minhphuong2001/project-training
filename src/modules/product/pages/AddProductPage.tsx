@@ -3,6 +3,7 @@ import { Box } from '@mui/system'
 import InputField from '../../../components/FormField/InputField'
 import { useForm, Controller } from 'react-hook-form'
 import {
+  Button,
   Typography,
   FormGroup,
   FormControlLabel,
@@ -12,7 +13,7 @@ import {
   InputAdornment,
   FilledInput,
   TextField,
-  Button
+  CircularProgress
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import AdapterMomentFns from '@mui/lab/AdapterMoment';
@@ -29,15 +30,21 @@ import { AppState } from '../../../redux/reducer';
 import * as Yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import EditDocument from '../../../components/EditDocument';
+import Select from 'react-select'
+import axios from 'axios';
+import { API_PATHS } from '../../../configs/api';
+import Cookies from 'js-cookie';
+import { ACCESS_TOKEN_KEY } from '../../../utils/constants';
+import { toast, ToastContainer } from 'react-toastify';
 
 const initialValue = {
-  vendors: '',
+  vendor_id: {},
   name: '',
   brand: '',
   condition: '',
   sku: '1646235088515',
   categories: '',
-  images: [],
+  imagesOrder: [],
   description: '',
   memberships: '',
   meta: '',
@@ -59,10 +66,14 @@ export default function AddProductPage() {
   const history = useHistory();
   const { brands } = useSelector((state: AppState) => state.brand);
   const { categories } = useSelector((state: AppState) => state.category);
+  const { vendors } = useSelector((state: AppState) => state.vendor);
   const [showSaleCheckbox, setShowSaleCheckbox] = useState(false);
 
+  const [selectImage, setSelectImage] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
   const validationSchema = Yup.object().shape({
-    vendors: Yup.string()
+    vendor_id: Yup.object()
       .required('This field is required.'),
     name: Yup.string()
       .required('This field is required.'),
@@ -90,8 +101,56 @@ export default function AddProductPage() {
     }
   }
 
-  const onSubmit = (data: any) => {
-    console.log(data);
+  const options: any = vendors.slice(0, 100).map(function (vendor) {
+    return { value: vendor.id, label: vendor.name };
+  })
+
+  const colourStyles = {
+    control: (styles: any) => ({ ...styles, backgroundColor: '#323259', flex: 1}),
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const fileArr = Array.from(e.target.files).map(file => URL.createObjectURL(file));
+      
+      setSelectImage(prev => prev.concat(fileArr as any));
+      
+      Array.from(e.target.files).map(file => URL.createObjectURL(file));
+    }
+  }
+  const handleRemoveImage = (index: number) => {
+    selectImage.splice(index, 1);
+    setSelectImage([...selectImage]);
+  }
+
+  const onSubmit = async (data: any) => {
+    try {
+      setIsLoading(true);
+      const formData = new FormData();
+      const values = {
+        vendor_id: data?.vendor_id.value,
+        ...data
+      }
+      formData.append('images', `${selectImage}`)
+      formData.append('productDetail', `${JSON.stringify(values)}`)
+      console.log(values);
+
+      const response = await axios.post(`${API_PATHS.productAdmin}/create`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: Cookies.get(ACCESS_TOKEN_KEY) || '',
+        }
+      })
+      setIsLoading(false);
+      console.log(response.data);
+      if (response.data?.success === true) {
+        toast.success('Update successfully');
+      } else {
+        toast.error('Something went wrong');
+      }
+    } catch (error: any) {
+      console.log(error?.message);
+    }
   }
 
   return (
@@ -124,11 +183,21 @@ export default function AddProductPage() {
         >
           <div className='input-item'>
             <p className='label-name'>Vendors <span className='star'><sup>*</sup></span></p>
-            <InputField
-              name='vendors'
-              label='Vendors'
+            <Controller
+              name='vendor_id'
               control={control}
-              style={{color: '#fff', backgroundColor: '#323259', flex: 1 }}
+              render={({ field }) => (
+                <Select
+                  styles={colourStyles}
+                  className="basic-single"
+                  classNamePrefix="select"
+                  value={field.value}
+                  onChange={(e) => {
+                    field.onChange(e)
+                  }}
+                  options={options}
+                />
+              )}
             />
           </div>
 
@@ -159,7 +228,7 @@ export default function AddProductPage() {
               name='condition'
               label='Condition'
               control={control}
-              options={[{ id: 'used', name: 'Used' }]}
+              options={[{ id: '123', name: 'Used' }]}
               style={{ color: '#fff', backgroundColor: '#323259', flex: 1 }}
             />
           </div>
@@ -176,8 +245,12 @@ export default function AddProductPage() {
           <div className="input-item">
             <p className='label-name'>Image <span className='star'><sup>*</sup></span></p>
             <Controller
-              render={() => <UploadImage />}
-              name='images'
+              render={({ field }) => <UploadImage
+                selectImage={selectImage}
+                onChangeImage={handleImageChange}
+                onRemoveImage={handleRemoveImage}
+              />}
+              name='imagesOrder'
               control={control}
             />
           </div>
@@ -464,6 +537,8 @@ export default function AddProductPage() {
           borderImage: 'initial',
           zIndex: 2,
           width: '100%', 
+          display: 'flex',
+          alignItems: 'center'
         }}
       >
         <Button
@@ -473,7 +548,19 @@ export default function AddProductPage() {
         >
           add product
         </Button>
+        {isLoading ? <CircularProgress sx={{ marginLeft: 2, color: '#fff' }} size={28} /> : null}
       </Box>
+      <ToastContainer
+        position='top-right'
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   )
 }

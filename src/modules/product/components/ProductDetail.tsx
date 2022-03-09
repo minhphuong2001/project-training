@@ -1,7 +1,7 @@
-import React, { ChangeEvent, useState } from 'react'
+import React, { ChangeEvent, useEffect, useState } from 'react'
 import { Box } from '@mui/system'
 import InputField from '../../../components/FormField/InputField'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import {
     Typography,
     FormGroup,
@@ -30,6 +30,7 @@ import { IProductDetail } from '../../../models/product';
 import { numberFormat } from '../../../utils/common';
 import { useSelector } from 'react-redux';
 import { AppState } from '../../../redux/reducer';
+import EditDocument from '../../../components/EditDocument';
 
 export interface ProductDetailProps {
     product: IProductDetail;
@@ -55,16 +56,36 @@ function getStyles(name: string, personName: string[], theme: Theme) {
             : theme.typography.fontWeightMedium,
     };
 }
+const initialValues = {
+    vendor_id: '',
+    name: '',
+    brand: '',
+    condition: '',
+    sku: '',
+    categories: [],
+    imagesOrder: [],
+    description: '',
+    memberships: '',
+    meta: '',
+    meta_description: '',
+    meta_keywords: '',
+    tax_exempt: 0,
+    zone: '',
+    product_page_title: '',
+    quantity: '',
+    price: '',
+    sale_price: '',
+    arriveDate: new Date(),
+    shipping: '',
+    facebook_marketing_enabled: 0,
+    google_feed_enabled: 0,
+}
 
-export default function ProductDetail({ product, brand }: ProductDetailProps) {
-    const { control } = useForm({
-        defaultValues: {
-            vendors: '',
-            productTitle: ''
-        },
+export default function ProductDetail({ product, brand }: ProductDetailProps) {  
+    const { control, handleSubmit, setValue } = useForm({
+        defaultValues: initialValues,
         mode: 'all'
     });
-    const [date, setDate] = useState<Date | null>(null);
     const theme = useTheme();
     const { categories } = useSelector((state: AppState) => state.category);
     const { shippings } = useSelector((state: AppState) => state.shipping);
@@ -87,13 +108,46 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
             setShowSaleCheckbox(false);
         }
     }
+    useEffect(() => {
+        setValue('vendor_id', product?.vendor_id);
+        setValue('name', product?.name);
+        setValue('sku', product?.sku);
+        setValue('price', String(product?.price));
+        setValue('quantity', String(product?.quantity));
+        setValue('sale_price', numberFormat(product?.sale_price));
+        setValue('description', product?.description)
+    }, [product, setValue])
+
+    const onSubmit = (data: any) => {
+        console.log(data);
+    }
 
     return (
         <div>
             <Box>
-                
-                <Typography my={2} variant='h4' sx={{ color: '#fff' }} >
+                <Typography my={1} variant='h5' sx={{ color: '#fff' }} >
                     {product?.name}
+                </Typography>
+                <Typography
+                    sx={{
+                        position: 'relative',
+                        display: 'inline-block',
+                        textAlign: 'center',
+                        color: '#b18aff',
+                        marginLeft: '10px',
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            bottom: '-5px',
+                            width: '40px',
+                            height: '2px',
+                            left: '-10px',
+                            backgroundColor: '#b18aff',
+                            borderRadius: '2px'
+                        }
+                    }}
+                >
+                    Info
                 </Typography>
                 <Box
                     sx={{
@@ -104,8 +158,7 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                     <div className='input-item'>
                         <p className='label-name'>Vendors <span className='star'><sup>*</sup></span></p>
                         <InputField
-                            name='vendors'
-                            value={product?.vendor_id}
+                            name='vendor_id'
                             control={control}
                             style={{color: '#fff', backgroundColor: '#323259', flex: 1 }}
                         />
@@ -114,8 +167,7 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                     <div className='input-item'>
                         <p className='label-name'>Product Title <span className='star'><sup>*</sup></span></p>
                         <InputField
-                            name='productTitle'
-                            value={product?.name}
+                            name='name'
                             control={control}
                             style={{color: '#fff', backgroundColor: '#323259', flex: 1 }}
                         />
@@ -125,7 +177,6 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                         <p className='label-name'>Brand <span className='star'><sup>*</sup></span></p>
                         <SelectField
                             name='brand'
-                            label='Brand'
                             control={control}
                             options={brand}
                             style={{ color: '#fff', backgroundColor: '#323259', flex: 1 }}
@@ -136,7 +187,6 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                         <p className='label-name'>Condition <span className='star'><sup>*</sup></span></p>
                         <SelectField
                             name='condition'
-                            label='Condition'
                             control={control}
                             options={[{ id: 'used', name: 'Used' }]}
                             style={{ color: '#fff', backgroundColor: '#323259', flex: 1 }}
@@ -147,7 +197,6 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                         <p className='label-name'>SKU <span className='star'><sup>*</sup></span></p>
                         <InputField
                             name='sku'
-                            value={product?.sku}
                             control={control}
                             style={{color: '#fff', backgroundColor: '#323259', flex: 1 }}
                         />
@@ -155,7 +204,7 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                     {/* images */}
                     <div className="input-item">
                         <p className='label-name'>Image <span className='star'><sup>*</sup></span></p>
-                        <UploadImage images={product?.images} />
+                        {/* <UploadImage images={product?.images} /> */}
                     </div>
                 
                     <div className='input-item'>
@@ -187,7 +236,12 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
 
                     <div className="input-item">
                         <p className='label-name'>Description <span className='star'><sup>*</sup></span></p>
-                        <p dangerouslySetInnerHTML={{__html: product?.description}}></p>
+                        {/* <p dangerouslySetInnerHTML={{ __html: product?.description }}></p> */}
+                        <Controller
+                            name='description'
+                            control={control}
+                            render={({ field }) => <EditDocument title={field.value} setTitle={(e) => field.onChange(e)} />}
+                        />
                     </div>
 
                     <div className="input-item">
@@ -215,7 +269,7 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                 <div className='input-item'>
                     <p className='label-name'>Member ship</p>
                     <SelectField
-                        name='member'
+                        name='memberships'
                         label='Member ship'
                         control={control}
                         options={[{ id: 'general', name: 'General' }]}
@@ -227,63 +281,85 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                     <p className='label-name'>Tax class</p>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginLeft: '-60px'}}>
                         <Typography mr={16} sx={{ color: '#fff' }}>Default</Typography>
-                        <FormGroup>
-                            <FormControlLabel control={<Checkbox />} label="Tax Exempt" sx={{ color: '#fff' }} />
-                        </FormGroup>
+                        <Controller
+                            name='tax_exempt'
+                            control={control}
+                            render={({ field }) => <FormControlLabel
+                            control={<Checkbox />}
+                            label="Tax Exempt"
+                            sx={{ color: '#fff' }}
+                            {...field}
+                            />}
+                        />
                     </Box>
                 </div>  
 
                 <div className='input-item'>
                     <p className='label-name'>Price <span className='star'><sup>*</sup></span></p>
                     <Box sx={{ flex: 1, display: 'flex', marginLeft: '-60px'}}>
-                        <FormControl sx={{ width: '150px', color: '#fff', backgroundColor: '#323259', marginRight: '20px' }} size='small' variant='outlined'>
-                            <FilledInput
-                                id="filled-adornment-amount"
-                                size='small'
-                                type='number'
-                                value={numberFormat(product?.price)}
-                                startAdornment={<InputAdornment position='end'>$</InputAdornment>}
-                            />
-                        </FormControl>
+                        <Controller
+                            name='price'
+                            control={control}
+                            render={({ field }) => (
+                                <FormControl sx={{ width: '150px', color: '#fff', backgroundColor: '#323259', marginRight: '20px' }} size='small' variant='outlined'>
+                                    <FilledInput
+                                        id="filled-adornment-amount"
+                                        size='small'
+                                        type='number'
+                                        startAdornment={<InputAdornment position='end'>$</InputAdornment>}
+                                        {...field}
+                                    />
+                                </FormControl>
+                            )}
+                        />
                         <FormGroup>
                             <FormControlLabel
-                                control={<Checkbox onChange={handleChangeSaleCheckbox} />}
-                                label="Sale"
-                                sx={{ color: '#fff' }}
+                            control={<Checkbox onChange={handleChangeSaleCheckbox} />}
+                            label="Sale"
+                            sx={{ color: '#fff' }}
                             />
-                        </FormGroup>
+                        </FormGroup> 
                     </Box>
-                    {
-                        showSaleCheckbox ? <FormControl sx={{ width: '150px', color: '#fff', backgroundColor: '#323259' }} size='small' variant='outlined'>
-                            <FilledInput
-                                id="filled-adornment-amount"
-                                size='small'
-                                type='number'
-                                value={0}
-                                startAdornment={<InputAdornment position='end'>$</InputAdornment>}
-                            />
-                        </FormControl> : null
-                    } 
+                    {showSaleCheckbox ?
+                        <Controller
+                            name='sale_price'
+                            control={control}
+                            render={({ field }) => (
+                                <FormControl sx={{ width: '150px', color: '#fff', backgroundColor: '#323259' }} size='small' variant='outlined'>
+                                    <FilledInput
+                                        id="filled-adornment-amount"
+                                        size='small'
+                                        type='number'
+                                        startAdornment={<InputAdornment position='end'>$</InputAdornment>}
+                                        {...field}
+                                    />
+                                </FormControl>
+                            )}
+                        /> : null} 
                 </div>
 
                 <div style={{ marginTop: '20px'}}>
                     <div className="input-item" >
-                    <p className='label-name'>Arrival date</p>
-                    <LocalizationProvider dateAdapter={AdapterMomentFns}>
-                        <DatePicker
-                            label='Date'
-                            value={date}
-                            onChange={(newValue: any) => setDate(newValue)}
-                            renderInput={(params) => (
-                            <TextField
-                                {...params}
-                                size='small'
-                                fullWidth
-                                sx={{ color: '#fff', backgroundColor: '#323259', marginLeft: 0 }}
-                            />
-                        )}
+                        <p className='label-name'>Arrival date</p>
+                        <Controller
+                            name='arriveDate'
+                            control={control}
+                            render={({ field }) => <LocalizationProvider dateAdapter={AdapterMomentFns}>
+                                <DatePicker
+                                    label='Date'
+                                    value={field.value}
+                                    onChange={(e) => field.onChange(e)}
+                                    renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        size='small'
+                                        fullWidth
+                                        sx={{ color: '#fff', backgroundColor: '#323259', marginLeft: 0 }}
+                                    />
+                                    )}
+                                />
+                            </LocalizationProvider>}
                         />
-                    </LocalizationProvider> 
                     </div>
                 </div>
 
@@ -291,7 +367,6 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                     <p className='label-name'>Quanlity in stock <span className='star'><sup>*</sup></span></p>
                     <InputField
                         name='quality'
-                        value={product?.quantity}
                         control={control}
                         style={{color: '#fff', backgroundColor: '#323259', flex: 1 }}
                     />
@@ -315,16 +390,22 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                         product?.shipping.map((item) => (
                             <div className='input-item' key={item.id}>
                                 <p className='label-name'>{item.zone_name} <span className='star'><sup>*</sup></span></p>
-                                <FormControl sx={{ color: '#fff', backgroundColor: '#323259' }} fullWidth size='small' variant='outlined'>
-                                    <InputLabel htmlFor="filled-adornment-amount">Money</InputLabel>
-                                    <FilledInput
-                                        id="filled-adornment-amount"
-                                        size='small'
-                                        type='number'
-                                        value={numberFormat(item.price)}
-                                        startAdornment={<InputAdornment position="start">$</InputAdornment>}
-                                    />
-                                </FormControl>
+                                <Controller
+                                    name='shipping'
+                                    control={control}
+                                    render={({ field }) => (
+                                        <FormControl sx={{ color: '#fff', backgroundColor: '#323259' }} fullWidth size='small' variant='outlined'>
+                                            <InputLabel htmlFor="filled-adornment-amount">Money</InputLabel>
+                                            <FilledInput
+                                                id="filled-adornment-amount"
+                                                size='small'
+                                                type='number'
+                                                value={numberFormat(item.price)}
+                                                startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                                            />
+                                        </FormControl>
+                                    )}
+                                />
                             </div>
                         ))
                     }
@@ -370,7 +451,7 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                 <div className="input-item">
                     <p className='label-name'>Meta description</p>
                     <SelectField
-                        name='metaDesc'
+                        name='meta_description'
                         control={control}
                         options={[
                             { id: 'autogenerate', name: 'Autogenerate' },
@@ -383,7 +464,7 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                 <div className='input-item'>
                     <p className='label-name'>Meta keywords</p>
                     <InputField
-                        name='metaKeywords'
+                        name='meta_keywords'
                         control={control}
                         style={{color: '#fff', backgroundColor: '#323259', flex: 1 }}
                     />
@@ -392,7 +473,7 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                 <div className='input-item'>
                     <p className='label-name'>Product page title</p>
                     <InputField
-                        name='productTitle'
+                        name='product_page_title'
                         control={control}
                         style={{color: '#fff', backgroundColor: '#323259', flex: 1 }}
                     />
@@ -423,7 +504,7 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                     width: '100%', 
                 }}
             >
-                <Button variant='contained' color='warning'>
+                <Button variant='contained' color='warning' onClick={handleSubmit(onSubmit)}>
                     update product
                 </Button>
             </Box>
