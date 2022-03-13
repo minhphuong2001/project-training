@@ -31,6 +31,7 @@ import { Action } from 'typesafe-actions';
 import { fetchThunk } from '../../common/redux/thunk';
 import { API_PATHS } from '../../../configs/api';
 import EditForm from './EditForm';
+import moment from 'moment';
 
 interface ProductTableProps {
     products: IProductData[];
@@ -227,7 +228,7 @@ function ProductTable({ products, onDelete, onUpdate }: ProductTableProps) {
                                             </TableCell>
                                             <TableCell
                                                 align='left'
-                                                sx={{ fontWeight: 600, width: '130px' }}
+                                                sx={{ fontWeight: 600, minWidth: '100px' }}
                                                 onClick={() => requestSort('arrivalDate')}
                                                 className={getClassName('arrivalDate')}
                                             >
@@ -277,10 +278,12 @@ function ProductTable({ products, onDelete, onUpdate }: ProductTableProps) {
                                                     <TableCell align='left'>{item.sku}</TableCell>
                                                     <TableCell align='left'
                                                         sx={{
+                                                            cursor: 'pointer',
                                                             '&:hover': {
                                                                 textDecoration: 'underline'
                                                             }
-                                                        }}>
+                                                        }}
+                                                    >
                                                         <Link to={`${ROUTES.product}/product-detail/${item.id}`} style={{ color: '#007bff' }}>
                                                             {item.name}
                                                         </Link>
@@ -316,7 +319,9 @@ function ProductTable({ products, onDelete, onUpdate }: ProductTableProps) {
                                                         {item.vendor}
                                                         </Link>
                                                     </TableCell>
-                                                    <TableCell align='left'>{item.arrivalDate}</TableCell>
+                                                    <TableCell align='left'>
+                                                        {moment(new Date(Number(item.arrivalDate * 1000)).getTime()).format('ll')}
+                                                    </TableCell>
                                                     <TableCell align='right' sx={{ display: 'flex', alignItems: 'center'}}>
                                                         <IconButton
                                                             color='inherit'

@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useState } from 'react'
+import React, { ChangeEvent, useEffect, useMemo, useState } from 'react'
 import { Box } from '@mui/system'
 import InputField from '../../../components/FormField/InputField'
 import { useForm, Controller } from 'react-hook-form'
@@ -8,17 +8,12 @@ import {
     FormControlLabel,
     Checkbox,
     FormControl,
-    InputLabel,
     InputAdornment,
     FilledInput,
     TextField,
     Button,
-    Select,
-    MenuItem,
-    SelectChangeEvent,
-    OutlinedInput
+    Select as MuiSelect,
 } from '@mui/material';
-import { Theme, useTheme } from '@mui/material/styles';
 import AdapterMomentFns from '@mui/lab/AdapterMoment';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import DatePicker from '@mui/lab/DatePicker';
@@ -26,36 +21,23 @@ import '../components/product.scss'
 import { SelectField } from '../../../components/FormField/SelectField';
 import UploadImage from '../../../components/UploadImage/UploadImage';
 import CustomToggle from '../../../components/FormField/CustomToggle/CustomToggle';
-import { IProductDetail } from '../../../models/product';
+import { IProductDetail, IShipping } from '../../../models/product';
 import { numberFormat } from '../../../utils/common';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { AppState } from '../../../redux/reducer';
 import EditDocument from '../../../components/EditDocument';
+import Select from 'react-select'
+import { IBrandData, IBrandDetail } from '../../../models/brand';
+import { ThunkDispatch } from 'redux-thunk';
+import { Action } from 'typesafe-actions';
+import { fetchThunk } from '../../common/redux/thunk';
+import { API_PATHS } from '../../../configs/api';
 
 export interface ProductDetailProps {
     product: IProductDetail;
-    brand: any;
+    brand: IBrandData[];
 }
 
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-    PaperProps: {
-        style: {
-        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-        width: 250,
-        },
-  },
-};
-
-function getStyles(name: string, personName: string[], theme: Theme) {
-    return {
-        fontWeight:
-        personName.indexOf(name) === -1
-            ? theme.typography.fontWeightRegular
-            : theme.typography.fontWeightMedium,
-    };
-}
 const initialValues = {
     vendor_id: '',
     name: '',
@@ -70,36 +52,28 @@ const initialValues = {
     meta_description: '',
     meta_keywords: '',
     tax_exempt: 0,
-    zone: '',
     product_page_title: '',
     quantity: '',
     price: '',
     sale_price: '',
     arriveDate: new Date(),
-    shipping: '',
+    shipping: [],
     facebook_marketing_enabled: 0,
     google_feed_enabled: 0,
 }
 
-export default function ProductDetail({ product, brand }: ProductDetailProps) {  
+function ProductDetail({ product, brand }: ProductDetailProps) {  
+    const dispatch = useDispatch<ThunkDispatch<AppState, null, Action<string>>>();
     const { control, handleSubmit, setValue } = useForm({
         defaultValues: initialValues,
         mode: 'all'
     });
-    const theme = useTheme();
     const { categories } = useSelector((state: AppState) => state.category);
     const { shippings } = useSelector((state: AppState) => state.shipping);
-    const [categoryData, setCategoryData] = React.useState<string[]>([]);
     const [showSaleCheckbox, setShowSaleCheckbox] = useState(false);
-
-    const handleChange = (event: SelectChangeEvent<typeof categoryData>) => {
-        const {
-            target: { value },
-        } = event;
-        setCategoryData(
-            typeof value === 'string' ? value.split(',') : value,
-        );
-    };
+    const [selectImage, setSelectImage] = useState([]);
+    const [brandDetail, setBrandDetail] = useState<IBrandDetail>();
+    const [shippingList, setShippingList] = useState<IShipping[]>([]);
 
     const handleChangeSaleCheckbox = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.checked === true) {
@@ -108,6 +82,38 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
             setShowSaleCheckbox(false);
         }
     }
+
+    useEffect(() => {
+        const getBrandDetail = async () => {
+            const response = await dispatch(fetchThunk(`${API_PATHS.brand}/detail`, 'post', { id: product?.brand_id }));
+            if (response?.success === true) {
+                setBrandDetail(response?.data);
+            }
+        }
+
+        getBrandDetail();
+    }, [dispatch, product])
+
+    const cateValueOptions: any = product?.categories.map(item => {
+        return { value: item.category_id, label: item.name }
+    })
+
+    const brandValueOptions: any = useMemo(() => {
+        return { value: brandDetail?.id, label: brandDetail?.name }
+    }, [brandDetail])
+
+    // useEffect(() => {
+    //     setShippingList(product?.shipping);
+    // }, [product])
+
+    const handleAddShipping = (item: IShipping) => {
+        setShippingList([...shippingList, item]);
+    }
+
+    const shippingValues: any = product?.shipping.map((item) => {
+        return {id: item.id, zone_name: item.zone_name, price: item.price};
+    })
+
     useEffect(() => {
         setValue('vendor_id', product?.vendor_id);
         setValue('name', product?.name);
@@ -115,13 +121,41 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
         setValue('price', String(product?.price));
         setValue('quantity', String(product?.quantity));
         setValue('sale_price', numberFormat(product?.sale_price));
-        setValue('description', product?.description)
-    }, [product, setValue])
+        setValue('description', product?.description);
+        setValue('categories', cateValueOptions);
+        setValue('brand', brandValueOptions);
+        setValue('meta_keywords', product?.meta_keywords);
+        setValue('product_page_title', product?.product_page_title);
+        setValue('shipping', shippingValues);
+    }, [product, setValue, cateValueOptions, brandValueOptions, shippingValues])
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+          const fileArr = Array.from(e.target.files).map(file => URL.createObjectURL(file));
+          
+          setSelectImage(prev => prev.concat(fileArr as any));
+          
+          Array.from(e.target.files).map(file => URL.createObjectURL(file));
+        }
+    }
+    const handleRemoveImage = (index: number) => {
+        selectImage.splice(index, 1);
+        setSelectImage([...selectImage]);
+    }
+    
+    const categoryOptions: any = categories.map(function (cate) {
+        return { value: cate.id, label: cate.name }
+    });
+    const colourStyles = {
+        control: (styles: any) => ({ ...styles, backgroundColor: '#323259', flex: 1}),
+    };
+    const brandOptions: any = brand.map(function (item) {
+        return { value: item?.id, label: item?.name }
+    })
 
     const onSubmit = (data: any) => {
         console.log(data);
     }
-
     return (
         <div>
             <Box>
@@ -175,11 +209,21 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
 
                     <div className='input-item'>
                         <p className='label-name'>Brand <span className='star'><sup>*</sup></span></p>
-                        <SelectField
+                        <Controller
                             name='brand'
                             control={control}
-                            options={brand}
-                            style={{ color: '#fff', backgroundColor: '#323259', flex: 1 }}
+                            render={({ field }) => (
+                                <Select
+                                    styles={colourStyles}
+                                    className="basic-single"
+                                    classNamePrefix="select"
+                                    value={field.value}
+                                    onChange={(e) => {
+                                        field.onChange(e)
+                                    }}
+                                    options={brandOptions}
+                                />
+                            )}
                         />
                     </div>
 
@@ -188,7 +232,7 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                         <SelectField
                             name='condition'
                             control={control}
-                            options={[{ id: 'used', name: 'Used' }]}
+                            options={[{ id: '1', name: 'Used' }]}
                             style={{ color: '#fff', backgroundColor: '#323259', flex: 1 }}
                         />
                     </div>
@@ -204,17 +248,45 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                     {/* images */}
                     <div className="input-item">
                         <p className='label-name'>Image <span className='star'><sup>*</sup></span></p>
-                        {/* <UploadImage images={product?.images} /> */}
+                        <Controller
+                            render={({ field }) => <UploadImage
+                                images={product?.images}
+                                selectImage={selectImage}
+                                onChangeImage={handleImageChange}
+                                onRemoveImage={handleRemoveImage}
+                            />}
+                            name='imagesOrder'
+                            control={control}
+                        />
                     </div>
                 
                     <div className='input-item'>
                         <p className='label-name'>Category <span className='star'><sup>*</sup></span></p>
-                        <FormControl fullWidth size='small' sx={{ margin: '10px 0'}}>
+                        <Controller
+                            name='categories'
+                            control={control}
+                            render={({ field }) => {
+                                return (
+                                    <Select
+                                        isMulti
+                                        name="colors"
+                                        options={categoryOptions}
+                                        className="basic-multi-select"
+                                        classNamePrefix="select"
+                                        styles={colourStyles}
+                                        value={field.value}
+                                        onChange={(e) => field.onChange(e)}
+                                    />
+                                )
+                            }}
+                        />
+                        {/* <FormControl fullWidth size='small' sx={{ margin: '10px 0'}}>
                             <InputLabel id="demo-multiple-name-label">Category</InputLabel>
                             <Select
                                 labelId="demo-multiple-name-label"
                                 id="demo-multiple-name"
                                 multiple
+                                defaultValue={product?.categories.map(item => item.category_id)}
                                 value={categoryData}
                                 onChange={handleChange}
                                 MenuProps={MenuProps}
@@ -231,7 +303,7 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                                     </MenuItem>
                                 ))}
                             </Select>
-                        </FormControl>
+                        </FormControl> */}
                     </div>
 
                     <div className="input-item">
@@ -270,7 +342,6 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                     <p className='label-name'>Member ship</p>
                     <SelectField
                         name='memberships'
-                        label='Member ship'
                         control={control}
                         options={[{ id: 'general', name: 'General' }]}
                         style={{ color: '#fff', backgroundColor: '#323259', flex: 1 }}
@@ -314,9 +385,9 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                         />
                         <FormGroup>
                             <FormControlLabel
-                            control={<Checkbox onChange={handleChangeSaleCheckbox} />}
-                            label="Sale"
-                            sx={{ color: '#fff' }}
+                                control={<Checkbox onChange={handleChangeSaleCheckbox} />}
+                                label="Sale"
+                                sx={{ color: '#fff' }}
                             />
                         </FormGroup> 
                     </Box>
@@ -346,7 +417,6 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                             control={control}
                             render={({ field }) => <LocalizationProvider dateAdapter={AdapterMomentFns}>
                                 <DatePicker
-                                    label='Date'
                                     value={field.value}
                                     onChange={(e) => field.onChange(e)}
                                     renderInput={(params) => (
@@ -366,7 +436,7 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                 <div className='input-item'>
                     <p className='label-name'>Quanlity in stock <span className='star'><sup>*</sup></span></p>
                     <InputField
-                        name='quality'
+                        name='quantity'
                         control={control}
                         style={{color: '#fff', backgroundColor: '#323259', flex: 1 }}
                     />
@@ -395,12 +465,12 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                                     control={control}
                                     render={({ field }) => (
                                         <FormControl sx={{ color: '#fff', backgroundColor: '#323259' }} fullWidth size='small' variant='outlined'>
-                                            <InputLabel htmlFor="filled-adornment-amount">Money</InputLabel>
                                             <FilledInput
                                                 id="filled-adornment-amount"
                                                 size='small'
                                                 type='number'
                                                 value={numberFormat(item.price)}
+                                                onChange={(e) => field.onChange(e)}
                                                 startAdornment={<InputAdornment position="start">$</InputAdornment>}
                                             />
                                         </FormControl>
@@ -409,16 +479,59 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
                             </div>
                         ))
                     }
+                    {
+                        shippingList.map((item, index: number) => (
+                            <div className="input-item" key={index}>
+                                <p className='label-name'>{item.zone_name}</p>
+                                <Box ml={-8} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around'}}>
+                                    <Controller
+                                        name='shipping'
+                                        control={control}
+                                        render={({ field }) => (
+                                            <FormControl sx={{ color: '#fff', backgroundColor: '#323259', width: '250px' }} fullWidth size='small' variant='outlined'>
+                                                <FilledInput
+                                                    id="filled-adornment-amount"
+                                                    type='number'
+                                                    value={numberFormat(item.price)}
+                                                    onChange={(e) => field.onChange(e)}
+                                                    startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                                                />
+                                            </FormControl>
+                                        )}
+                                    />
+                                    <Button
+                                        variant='outlined'
+                                        color='error'
+                                        size='small'
+                                        sx={{ width: '100px', fontSize: '10px' }}
+                                    >
+                                        remove
+                                    </Button>
+                                </Box>
+                            </div>
+                        ))
+                    }
                     
                     <div className="input-item">
-                        <p className='label-name'>Add Shipping Location</p>
-                        <SelectField
-                            name='zone'
-                            label='Select new zone'
-                            control={control}
-                            options={shippings}
-                            style={{ color: '#fff', backgroundColor: '#323259' }}
-                        />
+                        <p className='label-name'></p>
+                        <Box ml={-8} sx={{ display: 'flex', alignItems: 'center'}}>
+                            <SelectField
+                                placeholder='Select new zone'
+                                name='shipping'
+                                control={control}
+                                options={shippings}
+                                style={{ color: '#fff', backgroundColor: '#323259', width: '250px' }}
+                            />
+                            <Button
+                                variant='outlined'
+                                color='success'
+                                size='small'
+                                sx={{ width: '170px', fontSize: '10px' }}
+                                onClick={() => handleAddShipping({id: 1, zone_name: 'abc', price: 1.20})}
+                            >
+                                Add shipping location
+                            </Button>
+                        </Box>
                     </div>
                 </Box>
             </Box>
@@ -511,3 +624,5 @@ export default function ProductDetail({ product, brand }: ProductDetailProps) {
         </div>
     )
 }
+
+export default React.memo(ProductDetail);

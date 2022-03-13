@@ -22,7 +22,7 @@ export const Routes = () => {
     </div>}>
       <Switch location={location}>
         <AuthRoute path={ROUTES.login} component={LoginPage} />
-        <ProtectedRoute path={`${ROUTES.product}/manage-products`} component={HomePage} />
+        <ProtectedRoute path={`${ROUTES.product}`} component={HomePage} />
 
         <AuthRoute path="/" component={LoginPage} />
       </Switch>

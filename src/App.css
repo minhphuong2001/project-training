@@ -25,6 +25,7 @@ li {
   padding-right: 30px;
   height: 100%;
 }
+/* custom css MUI */
 .MuiTableCell-root {
   color: #fff!important;
 }
@@ -34,7 +35,11 @@ li {
 .css-kpr2he-MuiButtonBase-root-MuiPaginationItem-root {
   color: #fff!important;
 }
-
+.css-f20kmw-MuiTypography-root,
+.MuiFilledInput-input {
+  color: #fff!important;
+}
+/* .MuiOutlinedInput-input */
 /* sort table */
 .ascending::after {
   content: '↓';
@@ -48,10 +53,11 @@ li {
   margin-left: 5px;
 }
 
-.basic-single {
+/* custom react-select */
+.basic-single,
+.basic-multi-select {
   width: 100%;
   z-index: 100;
-  color: #fff;
 }
 .css-qc6sy-singleValue, 
 .select__input-container {

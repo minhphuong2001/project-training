@@ -1,44 +1,60 @@
-import React from 'react'
-import { Button, Grid } from '@mui/material'
+import React, { useState } from 'react'
+import { Button, FormControl, Grid, InputLabel, MenuItem, OutlinedInput, Select as MuiSelect } from '@mui/material'
 import InputField from '../../../components/FormField/InputField'
 import { SelectField } from '../../../components/FormField/SelectField';
 import { Box } from '@mui/system';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 
-const categoryOption = [
+const membershipsOptions = [
     {
-        id: 'Mobile',
-        name: 'Mobile'
+        id: 'M_4',
+        name: 'General(Memberships)'
     },
     {
-        id: 'Laptop',
-        name: 'Laptop'
+        id: 'P_4',
+        name: 'General(Pending Memberships)'
     },
 ]
 
 const statusOption = [
     {
-        id: 'Pending',
-        name: 'Pending'
+        id: '',
+        name: 'Any Status'
     },
     {
-        id: 'Received',
-        name: 'Received'
+        id: 'E',
+        name: 'Enable'
     },
+    {
+        id: 'D',
+        name: 'Disable'
+    },
+    {
+        id: 'U',
+        name: 'Unapproved vendor'
+    },   
 ]
+export interface IUserRole {
+    id: string | number;
+    enable: string | number;
+    name: string;
+}
+export interface UserSearchProps {
+    userRole: any;
+}
 
-export default function UserSearch() {
+export default function UserSearch({ userRole }: UserSearchProps) {
     const { control, handleSubmit } = useForm({
         defaultValues: {
             search: '',
-            category: '',
-            userType: '',
-            status: ''
+            memberships: [],
+            types: '',
+            status: []
         },
     });
-    const handleSearch = () => {
-        console.log('ok');
-        
+
+    const handleSearch = (data: any) => {
+        console.log(data);
     }
 
     return (
@@ -58,18 +74,40 @@ export default function UserSearch() {
                     </Grid>
                     <Grid item md={3}>
                         <SelectField
-                            name='member'
-                            label='All member'
+                            name='memberships'
+                            label='All memberships'
                             control={control}
-                            options={categoryOption}
+                            options={membershipsOptions}
                         />
                     </Grid>
                     <Grid item md={3}>
-                        <SelectField
-                            name='userType'
-                            label='User type'
+                        <Controller
+                            name='types'
                             control={control}
-                            options={categoryOption}
+                            render={({ field }) => (
+                                <FormControl size='small' fullWidth sx={{ marginTop: '16px' }}>
+                                    <InputLabel htmlFor="grouped-native-select">User type</InputLabel>
+                                    <MuiSelect
+                                        native
+                                        id="grouped-native-select"
+                                        label='User type'
+                                        value={field.value}
+                                        onChange={(e) => field.onChange(e)}
+                                    >
+                                        <option value=""></option>
+                                        <optgroup label="Memberships">
+                                            {userRole.administrator ? userRole.administrator.map((item: any) => (
+                                                    <option key={item?.id} value={item?.id}>{item?.name}</option>
+                                            )) : ''}
+                                        </optgroup>
+                                        <optgroup label="Pending memberships">
+                                            {userRole.customer ? userRole.customer.map((item: any) => (
+                                                    <option key={item?.id} value={item?.id}>{item?.name}</option>
+                                                )) : ''}
+                                        </optgroup>
+                                    </MuiSelect>
+                                </FormControl>
+                            )}
                         />
                     </Grid>
                     <Grid item md={2}>

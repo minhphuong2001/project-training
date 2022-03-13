@@ -53,7 +53,7 @@ export default function ProductPage() {
     }, [getCategoryList])
 
     const getBrandList = useCallback(async () => {
-        const response = await dispatch(fetchThunk(API_PATHS.brand, 'get'));
+        const response = await dispatch(fetchThunk(`${API_PATHS.brand}/list`, 'get'));
 
         if (response?.success === true) {
             dispatch(setBrandData(response?.data));

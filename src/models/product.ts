@@ -4,10 +4,10 @@ export interface IProductData {
     price: number|string,
     enabled: number,
     weight: number,
-    arrivalDate: Date | string,
+    arrivalDate: number,
     name: string;
     description: string;
-    created: Date | string,
+    created: number,
     vendor: string;
     vendorID: number;
     amount: number|string;
@@ -59,7 +59,7 @@ export interface IProductDetail {
 }
 
 export interface IShipping {
-    id: string;
+    id: number | string;
     zone_name: string;
     price: number;
 }

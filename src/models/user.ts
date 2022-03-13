@@ -1,6 +1,3 @@
-import { valuesIn } from "lodash";
-import { StringLocale } from "yup/lib/locale";
-
 export interface AuthToken {
   accessToken: string;
   expiresIn: number;
@@ -27,4 +24,31 @@ export interface IVendorData {
   companyName: string;
   login: string;
   name: string;
+}
+
+export interface IUserData {
+  profile_id: string;
+  vendor: string;
+  fistName: string;
+  lastName: string;
+  created: number;
+  last_login: number;
+  access_level: string;
+  vendor_id: string | number;
+  storeName: string;
+  product: number;
+  order: {
+    order_as_buyer: number;
+    order_as_buyer_total: number;
+  };
+  wishlist: number;
+}
+export interface IUserDataList {
+  user: {
+    profile_id: string;
+    login: string;
+  };
+  data: IUserData[];
+  recordsTotal: number;
+  recordsFiltered: number;
 }
