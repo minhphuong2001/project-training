@@ -1,38 +1,28 @@
-import React, { useState } from 'react'
-import { Button, FormControl, Grid, InputLabel, MenuItem, OutlinedInput, Select as MuiSelect } from '@mui/material'
+import React from 'react'
+import {
+    Button,
+    FormControl,
+    Grid,
+    InputLabel,
+    MenuItem,
+    OutlinedInput,
+    Select as MuiSelect,
+} from '@mui/material'
 import InputField from '../../../components/FormField/InputField'
 import { SelectField } from '../../../components/FormField/SelectField';
 import { Box } from '@mui/system';
 import { useForm, Controller } from 'react-hook-form';
 
 const membershipsOptions = [
-    {
-        id: 'M_4',
-        name: 'General(Memberships)'
-    },
-    {
-        id: 'P_4',
-        name: 'General(Pending Memberships)'
-    },
+    { id: 'M_4', name: 'General(Memberships)' },
+    { id: 'P_4', name: 'General(Pending Memberships)' },
 ]
 
 const statusOption = [
-    {
-        id: '',
-        name: 'Any Status'
-    },
-    {
-        id: 'E',
-        name: 'Enable'
-    },
-    {
-        id: 'D',
-        name: 'Disable'
-    },
-    {
-        id: 'U',
-        name: 'Unapproved vendor'
-    },   
+    { id: '', name: 'Any Status' },
+    { id: 'E', name: 'Enable' },
+    { id: 'D', name: 'Disable' },
+    { id: 'U', name: 'Unapproved vendor' },   
 ]
 export interface IUserRole {
     id: string | number;
@@ -41,20 +31,24 @@ export interface IUserRole {
 }
 export interface UserSearchProps {
     userRole: any;
+    onSearch: (data: any) => void;
 }
 
-export default function UserSearch({ userRole }: UserSearchProps) {
+const initialValues = {
+    search: '',
+    memberships: [],
+    types: [],
+    status: []
+}
+
+export default function UserSearch({ userRole, onSearch }: UserSearchProps) {
+
     const { control, handleSubmit } = useForm({
-        defaultValues: {
-            search: '',
-            memberships: [],
-            types: '',
-            status: []
-        },
+        defaultValues: initialValues,
     });
 
     const handleSearch = (data: any) => {
-        console.log(data);
+        onSearch(data);
     }
 
     return (
@@ -73,11 +67,36 @@ export default function UserSearch({ userRole }: UserSearchProps) {
                         />
                     </Grid>
                     <Grid item md={3}>
-                        <SelectField
+                        {/* <SelectField
                             name='memberships'
                             label='All memberships'
                             control={control}
                             options={membershipsOptions}
+                        /> */}
+                        <Controller
+                            name='memberships'
+                            control={control}
+                            render={({ field }) => {
+                                return (
+                                    <FormControl size='small' fullWidth sx={{ marginTop: '16px' }}>
+                                        <InputLabel>All memberships</InputLabel>
+                                        <MuiSelect
+                                            label='All memberships'
+                                            value={field.value}
+                                            multiple
+                                            onChange={(e) => field.onChange(e)}
+                                            input={<OutlinedInput label="All memberships" />}
+                                            renderValue={(selected: any) => selected.join(', ')}
+                                        >
+                                            {membershipsOptions.map((item) => (
+                                                <MenuItem key={item.id} value={item.id}>
+                                                    {item.name}
+                                                </MenuItem>
+                                            ))}
+                                        </MuiSelect>
+                                    </FormControl>
+                                )
+                            }}
                         />
                     </Grid>
                     <Grid item md={3}>

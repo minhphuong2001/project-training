@@ -52,3 +52,47 @@ export interface IUserDataList {
   recordsTotal: number;
   recordsFiltered: number;
 }
+export interface IUserProfileDetail {
+  info: {
+    income: number;
+    expense: number;
+    earning: number;
+    order_as_buyer: number;
+    order_as_buyer_total: number;
+    products_total: number;
+    profile_id: number | string;
+    default_card_id: number | string;
+    taxExempt: number | string;
+    paymentRailsType: string;
+    paymentRailsId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    access_level: string;
+    joined: number;
+    first_login: number;
+    last_login: number;
+    status: string;
+    membership_id: string;
+    pending_membership_id: string;
+    language: string;
+    forceChangePassword: number;
+    referer: string;
+    statusComment: string;
+    roles: string[];
+    companyName: string;
+    vendor_id: number | string;
+
+  },
+  account_status: {
+    "E": "Enabled",
+    "D": "Disabled",
+    "U": "Unapproved vendor"
+  },
+  account_role: AccountRole[];
+}
+
+interface AccountRole {
+  id: number | string;
+  name: string;
+}

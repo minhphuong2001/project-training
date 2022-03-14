@@ -88,13 +88,21 @@ export default function ProductPage() {
         getVendorList();
     }, [getVendorList])
 
-    const onSearch = useCallback(async (data: any) => {
-        setIsLoading(true);
-        const response = await dispatch(fetchThunk(API_PATHS.productList, 'post', data));
+    const onSearch = async (data: any) => {
+        try {
+            setIsLoading(true);
+            const response = await dispatch(fetchThunk(API_PATHS.productList, 'post', data));
 
-        setIsLoading(false);
-        dispatch(setProductData(response));
-    }, [dispatch])
+            setIsLoading(false);
+            if (response?.data === false) {
+                setProductList([]);
+            } else {
+                dispatch(setProductData(response));
+            }
+        } catch (error: any) {
+            console.log(error.message);
+        }
+    }
 
     const handleRemove = useCallback(async (id: any) => {
         try {

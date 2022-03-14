@@ -74,7 +74,7 @@ const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
 function ProductTable({ products, onDelete, onUpdate }: ProductTableProps) {
     const dispatch = useDispatch<ThunkDispatch<AppState, null, Action<string>>>();
-    const [rowsPerPage, setRowsPerPage] = useState('10');
+    const [rowsPerPage, setRowsPerPage] = useState('25');
     const [showUpdateDialog, setShowUpdateDialog] = useState(false);
     const { items, requestSort, sortConfig } = useSortTableData(products);
     const { recordsTotal } = useSelector((state: AppState) => state.product.products);

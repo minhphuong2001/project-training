@@ -23,7 +23,7 @@ li {
   padding-top: 100px;
   padding-left: 270px;
   padding-right: 30px;
-  height: 100%;
+  min-height: 100vh;
 }
 /* custom css MUI */
 .MuiTableCell-root {

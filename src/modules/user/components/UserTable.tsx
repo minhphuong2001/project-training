@@ -71,7 +71,7 @@ const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
 function UserTable({ users, onDelete }: UserTableProps) {
     const dispatch = useDispatch<ThunkDispatch<AppState, null, Action<string>>>();
-    const [rowsPerPage, setRowsPerPage] = useState('10');
+    const [rowsPerPage, setRowsPerPage] = useState('25');
     const { items, requestSort, sortConfig } = useSortTableData(users);
     const { recordsTotal } = useSelector((state: AppState) => state.user.users);
     const [page, setPage] = useState(1);
@@ -157,7 +157,10 @@ function UserTable({ users, onDelete }: UserTableProps) {
                                                     size='small'
                                                     checked={isCheckAll}
                                                     onChange={handleSelectAll}
-                                                    onClick={() => setIsRemove(!isRemove)}
+                                                    onClick={() => {
+                                                        setIsRemove(!isRemove);
+                                                        setIsOpacity(!isOpacity);
+                                                    }}
                                                 />
                                             </TableCell>
                                             <TableCell
@@ -228,16 +231,10 @@ function UserTable({ users, onDelete }: UserTableProps) {
                                                     key={index}
                                                     sx={{
                                                         '&:last-child td, &:last-child th': { border: 0 },
-                                                        opacity: item.profile_id == userItem?.profile_id && isOpacity ? 0.6 : 1
+                                                        opacity: (item.profile_id == userItem?.profile_id && isOpacity) ? 0.6 : 1
                                                     }}
                                                 >
-                                                    <TableCell
-                                                        sx={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center'
-                                                        }}
-                                                    >
+                                                    <TableCell sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                                                         <Checkbox
                                                             {...label}
                                                             size='small'
@@ -249,7 +246,9 @@ function UserTable({ users, onDelete }: UserTableProps) {
                                                         <span>|</span>
                                                     </TableCell>
                                                     <TableCell align='left'>
-                                                        <Typography variant='body2' sx={{ color: '#007bff!important', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>{item.vendor}</Typography>
+                                                        <Link to={`${ROUTES.user}/user-detail/${item.profile_id}`}>
+                                                            <Typography variant='body2' sx={{ color: '#007bff!important', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>{item.vendor}</Typography>
+                                                        </Link>
                                                         <span>{item.storeName}</span>
                                                     </TableCell>
                                                     <TableCell align='left'
@@ -260,9 +259,6 @@ function UserTable({ users, onDelete }: UserTableProps) {
                                                                 textDecoration: 'underline'
                                                             }
                                                         }}>
-                                                        {/* <Link to={`${ROUTES.product}/product-detail/${item.id}`} style={{ color: '#007bff' }}>
-                                                            {item.name}
-                                                        </Link> */}
                                                         {item.fistName} {item.lastName}
                                                     </TableCell>
                                                     <TableCell align='left'>{item.access_level}</TableCell>

@@ -54,12 +54,7 @@ export default function ProductDetailPage() {
                 <ArrowBack />
             </Box>
             {isLoading ?
-                <Box style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '80vh'
-                }}>
+                <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '80vh' }}>
                     <CircularProgress size={48} />
                 </Box> : <ProductDetail product={productDetail as IProductDetail} brand={brands} />
             }

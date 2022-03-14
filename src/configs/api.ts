@@ -26,5 +26,6 @@ export const API_PATHS = {
   vendors: 'https://api.gearfocus.div4.pgtest.co/apiAdmin/vendors/list',
   userRole: 'https://api.gearfocus.div4.pgtest.co/apiAdmin/commons/role',
   countries: 'https://api.gearfocus.div4.pgtest.co/apiAdmin/commons/country',
-  userAdmin: 'https://api.gearfocus.div4.pgtest.co/apiAdmin/users'
+  userAdmin: 'https://api.gearfocus.div4.pgtest.co/apiAdmin/users',
+  userProfileDetail: 'https://api.gearfocus.div4.pgtest.co/apiVendor/profile/detail',
 };

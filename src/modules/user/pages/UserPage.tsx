@@ -10,6 +10,7 @@ import { fetchThunk } from '../../common/redux/thunk';
 import { API_PATHS } from '../../../configs/api';
 import { setUserData } from '../redux/userReducer'
 import { IUserData } from '../../../models/user'
+import { toast, ToastContainer } from 'react-toastify'
 
 export default function UserPage() {
     const dispatch = useDispatch<ThunkDispatch<AppState, null, Action<string>>>();
@@ -42,14 +43,42 @@ export default function UserPage() {
         getUserRole();
     }, [dispatch])
 
-    const handleDeleteUser = (value: any) => {
-        console.log(value);
+    const handleDeleteUser = async (id: any) => {
+        try {
+            setIsLoading(true);
+            await dispatch(fetchThunk(`${API_PATHS.userAdmin}/edit`, 'post', { params: [{ id: id, delete: 1 }] }));
+
+            setIsLoading(false);   
+            getUserList();
+            toast.success('Delete user successfully!');
+        } catch (error: any) {
+            console.log(error.message);
+        }
+    }
+
+    const handleSearchUser = async (data: any) => {
+        const values = {
+            search: data?.search,
+            memberships: data?.memberships,
+            types: data?.types,
+            status: data?.status
+        }
+
+        try {
+            setIsLoading(true);
+            const response = await dispatch(fetchThunk(`${API_PATHS.userAdmin}/list`, 'post', values));
+
+            setIsLoading(false);
+            dispatch(setUserData(response));
+        } catch (error: any) {
+            console.log(error.message);
+        }
     }
 
     useEffect(() => {
         setUserList([...users?.data]);
     }, [users])
-    console.log(userRole);
+
     return (
         <Box>
             <Typography
@@ -61,7 +90,7 @@ export default function UserPage() {
             </Typography>
             
             {/* search product */}
-            <UserSearch userRole={userRole}/>
+            <UserSearch userRole={userRole} onSearch={handleSearchUser}/>
 
             <Button
                 variant='contained'
@@ -80,7 +109,18 @@ export default function UserPage() {
                 }}>
                     <CircularProgress size={48} />
                 </Box> : <>
-                    <UserTable users={userList} onDelete={handleDeleteUser}/>
+                    <UserTable users={userList} onDelete={handleDeleteUser} />
+                    <ToastContainer
+                        position="top-right"
+                        autoClose={5000}
+                        hideProgressBar={false}
+                        newestOnTop={false}
+                        closeOnClick
+                        rtl={false}
+                        pauseOnFocusLoss
+                        draggable
+                        pauseOnHover
+                    />
                 </>
             }
         </Box>

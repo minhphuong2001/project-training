@@ -1,0 +1,39 @@
+// user profile detail 
+.profile-item {
+    display: flex;
+    flex-wrap: wrap;
+    color:#fff;
+    font-size: 15px;
+    line-height: 20px;
+    margin: 0px -15px 24px;
+    text-align: left;
+    font-family: 'Oswald', sans-serif;
+
+    .item-name {
+        flex-basis: 25%;
+        margin: 0px 0px 8px;
+        padding: 0px 15px;
+        text-align: right;
+    }
+
+    .item-data {
+        display: flex;
+        flex-basis: 25%;
+        padding: 0 15px;
+        text-align: left;
+        
+        & span:first-child {
+            color: #007bff;
+        }
+
+        & span:last-child {
+            margin-left: 5px;
+            color: #fff!important;
+        }
+    }
+
+    .item-input {
+        margin-top: -16px;
+        margin-left: 16px;
+    }
+}

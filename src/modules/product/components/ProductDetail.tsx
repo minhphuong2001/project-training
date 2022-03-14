@@ -325,11 +325,11 @@ function ProductDetail({ product, brand }: ProductDetailProps) {
             {/*  */}
             <div
                 style={{
-                overflow: 'hidden',
-                backgroundColor: '#323259',
-                height: '20px',
-                width: '104%',
-                marginLeft: '-20px'
+                    overflow: 'hidden',
+                    backgroundColor: '#323259',
+                    height: '20px',
+                    width: '104%',
+                    marginLeft: '-20px'
                 }}
             ></div>
             {/* pricing */}
