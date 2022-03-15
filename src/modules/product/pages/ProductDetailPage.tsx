@@ -47,7 +47,8 @@ export default function ProductDetailPage() {
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    cursor: 'pointer'
                 }}
                 onClick={() => history.push(`${ROUTES.product}/manage-products`)}
             >

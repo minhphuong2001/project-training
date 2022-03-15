@@ -296,7 +296,6 @@ export default function UserDetail({ profileDetail, onUpdate }: UserDetailProps)
                     <p className="item-input">
                         <SelectField
                             name='membership_id'
-                            label='All memberships'
                             control={control}
                             options={[
                                 { id: 1, name: 'Ignore Membership' },
@@ -339,6 +338,7 @@ export default function UserDetail({ profileDetail, onUpdate }: UserDetailProps)
                     width: '100%'
                 }}
             ></div>
+            {/* tax */}
             <Box my={2}>
                 <Typography my={2} variant='h5' sx={{ color: '#fff' }} >Tax information</Typography>
                 <div className="profile-item">

@@ -173,9 +173,9 @@ function UserTable({ users, onDelete }: UserTableProps) {
                                             </TableCell>
                                             <TableCell
                                                 align='left'
-                                                sx={{ fontWeight: 600, minWidth: '250px' }}
-                                                onClick={() => requestSort('firstName')}
-                                                className={getClassName('firstName')}
+                                                sx={{ fontWeight: 600, cursor: 'pointer', minWidth: '250px' }}
+                                                onClick={() => requestSort('fistName')}
+                                                className={getClassName('fistName')}
                                             >
                                                 Name
                                             </TableCell>
@@ -247,7 +247,9 @@ function UserTable({ users, onDelete }: UserTableProps) {
                                                     </TableCell>
                                                     <TableCell align='left'>
                                                         <Link to={`${ROUTES.user}/user-detail/${item.profile_id}`}>
-                                                            <Typography variant='body2' sx={{ color: '#007bff!important', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>{item.vendor}</Typography>
+                                                            <Typography variant='body2' sx={{ color: '#007bff!important', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
+                                                                {item.vendor}
+                                                            </Typography>
                                                         </Link>
                                                         <span>{item.storeName}</span>
                                                     </TableCell>

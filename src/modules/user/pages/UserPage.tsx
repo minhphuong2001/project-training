@@ -11,8 +11,11 @@ import { API_PATHS } from '../../../configs/api';
 import { setUserData } from '../redux/userReducer'
 import { IUserData } from '../../../models/user'
 import { toast, ToastContainer } from 'react-toastify'
+import { useHistory } from 'react-router';
+import { ROUTES } from '../../../configs/routes'
 
 export default function UserPage() {
+    const history = useHistory();
     const dispatch = useDispatch<ThunkDispatch<AppState, null, Action<string>>>();
     const { users } = useSelector((state: AppState) => state.user);
     const [isLoading, setIsLoading] = useState(false);
@@ -96,6 +99,7 @@ export default function UserPage() {
                 variant='contained'
                 color='secondary'
                 sx={{ margin: '24px 0' }}
+                onClick={() => history.push(`${ROUTES.user}/new-user`)}
             >
                 add user
             </Button>

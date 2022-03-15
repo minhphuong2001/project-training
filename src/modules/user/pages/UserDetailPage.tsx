@@ -36,13 +36,13 @@ export default function UserDetailPage() {
             email: data?.email,
             firstName: data?.firstName,
             lastName: data?.lastName,
-            forceChangePassword: data?.forceChangePassword === false ? 0 : 1,
             membership_id: data?.membership_id,
             password: data?.password,
             confirm_password: data?.confirmPassword,
             status: data?.account_status,
             statusComment: data?.status_comment,
             taxExempt: data?.taxExempt === false ? 0 : 1,
+            forceChangePassword: data?.forceChangePassword === false ? 0 : 1,
             roles: [1]
         }
         console.log(values);
