@@ -8,12 +8,23 @@
 .sub {
     display: none;
     position: absolute;
-    background-color: pink;
+    background-color: #fff;
     color: #000;
-    top: 30px;
+    top: 25px;
     right: 0;
     width: 300px;
     padding: 10px 20px;
     border-radius: 5px;
     transition: all 0.75s;
+}
+
+.logout {
+    margin-top: 8px;
+    color: #000;
+    cursor: pointer;
+    font-family: 'Oswald', sans-serif;
+
+    &:hover {
+        color: #007bff;
+    }
 }

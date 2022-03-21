@@ -292,19 +292,22 @@ function ProductTable({ products, onDelete, onUpdate }: ProductTableProps) {
                                                     <TableCell
                                                         align='left'
                                                         sx={{ fontWeight: 600 }}
+                                                        onClick={() => setProductItem(item)}
                                                     >
                                                         {/* edit form  */}
                                                         <EditForm
                                                             index={index}
+                                                            name='price'
                                                             money='$'
                                                             value={String(item.price)}
                                                             setValue={handleSetPrice}
                                                         />
                                                     </TableCell>
-                                                    <TableCell align='left'>
+                                                    <TableCell align='left' onClick={() => setProductItem(item)}>
                                                         {/* edit form  */}
                                                         <EditForm
                                                             index={index}
+                                                            name='amount'
                                                             value={String(item.amount)}
                                                             setValue={handleSetAmount}
                                                         />

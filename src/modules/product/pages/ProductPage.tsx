@@ -121,13 +121,13 @@ export default function ProductPage() {
             setIsLoading(true);
             const formData = new FormData();
             formData.append('productDetail', `${JSON.stringify({
-                id: values.id,
+                // id: values.id,
                 vendor_id: values.vendorID,
                 name: values.name,
                 quantity: values.amount,
                 price: values.price,
-                ...values
             })}`);
+
             const response = await axios.post(`${API_PATHS.productAdmin}/create`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',

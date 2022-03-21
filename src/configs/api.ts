@@ -28,4 +28,5 @@ export const API_PATHS = {
   countries: 'https://api.gearfocus.div4.pgtest.co/apiAdmin/commons/country',
   userAdmin: 'https://api.gearfocus.div4.pgtest.co/apiAdmin/users',
   userProfileDetail: 'https://api.gearfocus.div4.pgtest.co/apiVendor/profile/detail',
+  uploadImage: `${getBaseUrl(APIService.public)}/products/upload-image`
 };

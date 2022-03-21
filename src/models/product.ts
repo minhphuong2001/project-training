@@ -17,7 +17,10 @@ export interface IProductData {
 }
 
 export interface IProductList {
-    user: boolean;
+    user: {
+        login: string;
+        profile_id: string;
+    };
     recordsTotal: number;
     recordsFiltered: number;
     data: IProductData[];

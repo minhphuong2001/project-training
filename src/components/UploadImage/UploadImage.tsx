@@ -7,7 +7,7 @@ interface UploadImageProps {
     images?: IImage[];
     onChangeImage: (e: any) => void;
     onRemoveImage: (index: number) => void;
-    selectImage: any[];
+    selectImage: any;
 }
 
 export default function UploadImage({ images, onChangeImage, onRemoveImage ,selectImage }: UploadImageProps) {
@@ -43,7 +43,7 @@ export default function UploadImage({ images, onChangeImage, onRemoveImage ,sele
                     }) : ''
                 }
                 {
-                    selectImage.map((item, index) => {
+                    selectImage.map((item: any, index: number) => {
                         return (
                             <div className="img-item" key={index}>
                                 <img src={item} alt="" />

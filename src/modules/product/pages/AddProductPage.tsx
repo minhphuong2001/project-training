@@ -43,7 +43,7 @@ const initialValue = {
   brand: '',
   condition: '',
   sku: '1646235088515',
-  categories: '',
+  categories: [],
   imagesOrder: [],
   description: '',
   memberships: '',
@@ -83,7 +83,7 @@ export default function AddProductPage() {
       .required('This field is required.'),
     sku: Yup.string()
       .required('This field is required.'),
-    categories: Yup.string()
+    categories: Yup.array()
       .required('This field is required.'),
   });
   
@@ -104,7 +104,9 @@ export default function AddProductPage() {
   const options: any = vendors.slice(0, 100).map(function (vendor) {
     return { value: vendor.id, label: vendor.name };
   })
-
+    const categoryOptions: any = categories.map(function (cate) {
+      return { value: cate.id, label: cate.name }
+  });
   const colourStyles = {
     control: (styles: any) => ({ ...styles, backgroundColor: '#323259', flex: 1}),
   };
@@ -112,9 +114,9 @@ export default function AddProductPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileArr = Array.from(e.target.files).map(file => URL.createObjectURL(file));
-      
+
       setSelectImage(prev => prev.concat(fileArr as any));
-      
+
       Array.from(e.target.files).map(file => URL.createObjectURL(file));
     }
   }
@@ -129,22 +131,58 @@ export default function AddProductPage() {
       const formData = new FormData();
       const values = {
         vendor_id: data?.vendor_id.value,
-        ...data
+        brand_id: data.brand,
+        condition_id: data.condition,
+        name: data.name,
+        categories: data.categories.map((value: any) => value?.value),
+        description: data.description,
+        enabled: 1,
+        memberships: data.memberships,
+        tax_exempt: data.tax_exempt,
+        price: data.price,
+        sale_price_type: '$',
+        sale_price: data.sale_price,
+        arrival_date: data.arriveDate,
+        inventory_tracking: 0,
+        quantity: data.quantity,
+        sku: data.sku,
+        participate_sale: 1,
+        og_tags_type: 0,
+        og_tags: '',
+        enableOffers: 1,
+        meta_description: data.meta_description,
+        meta_keywords: data.meta_keywords,
+        product_page_title: data.product_page_title,
+        facebook_marketing_enabled: data.facebook_marketing_enabled === false ? 0 : 1,
+        google_feed_enabled: data.google_feed_enabled === false ? 0 : 1,
+        imagesOrder: selectImage
       }
-      formData.append('images', `${selectImage}`)
-      formData.append('productDetail', `${JSON.stringify(values)}`)
-      console.log(values);
 
+      formData.append('productDetail', `${JSON.stringify(values)}`);
       const response = await axios.post(`${API_PATHS.productAdmin}/create`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: Cookies.get(ACCESS_TOKEN_KEY) || '',
         }
       })
+
+      // const fileImage = new FormData();
+      // fileImage.append('images', selectImage as any);
+      // fileImage.append('productId', '5165');
+      // const json = await axios.post(API_PATHS.uploadImage, fileImage, {
+      //   headers: {
+      //     'Content-Type': 'multipart/form-data',
+      //     Authorization: Cookies.get(ACCESS_TOKEN_KEY) || '',
+      //   }
+      // })
+      
       setIsLoading(false);
-      console.log(response.data);
       if (response.data?.success === true) {
-        toast.success('Update successfully');
+        toast.success('Add product successfully');
+        setTimeout(() => {
+          history.push(`${ROUTES.product}/product-detail/${response.data?.data}`);
+        }, 2500);
+      
       } else {
         toast.error('Something went wrong');
       }
@@ -229,7 +267,7 @@ export default function AddProductPage() {
               name='condition'
               label='Condition'
               control={control}
-              options={[{ id: '123', name: 'Used' }]}
+              options={[{ id: '294', name: 'Used' }]}
               style={{ color: '#fff', backgroundColor: '#323259', flex: 1 }}
             />
           </div>
@@ -258,12 +296,23 @@ export default function AddProductPage() {
     
           <div className='input-item'>
             <p className='label-name'>Category <span className='star'><sup>*</sup></span></p>
-            <SelectField
+            <Controller
               name='categories'
-              label='Category'
               control={control}
-              options={categories}
-              style={{ color: '#fff', backgroundColor: '#323259', flex: 1 }}
+              render={({ field }) => {
+                return (
+                  <Select
+                    isMulti
+                    name="colors"
+                    options={categoryOptions}
+                    className="basic-multi-select"
+                    classNamePrefix="select"
+                    styles={colourStyles}
+                    value={field.value}
+                    onChange={(e) => field.onChange(e)}
+                  />
+                )
+              }}
             />
           </div>
 

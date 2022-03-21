@@ -13,6 +13,7 @@ import {
     TextField,
     Button,
     Select as MuiSelect,
+    MenuItem,
 } from '@mui/material';
 import AdapterMomentFns from '@mui/lab/AdapterMoment';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
@@ -36,6 +37,7 @@ import { API_PATHS } from '../../../configs/api';
 export interface ProductDetailProps {
     product: IProductDetail;
     brand: IBrandData[];
+    onUpdateProduct: (data: any) => void;
 }
 
 const initialValues = {
@@ -58,22 +60,22 @@ const initialValues = {
     sale_price: '',
     arriveDate: new Date(),
     shipping: [],
-    facebook_marketing_enabled: 0,
-    google_feed_enabled: 0,
+    facebook_marketing_enabled: false,
+    google_feed_enabled: false,
 }
 
-function ProductDetail({ product, brand }: ProductDetailProps) {  
+function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) {  
     const dispatch = useDispatch<ThunkDispatch<AppState, null, Action<string>>>();
     const { control, handleSubmit, setValue } = useForm({
         defaultValues: initialValues,
         mode: 'all'
     });
     const { categories } = useSelector((state: AppState) => state.category);
-    const { shippings } = useSelector((state: AppState) => state.shipping);
+    // const { shippings } = useSelector((state: AppState) => state.shipping);
     const [showSaleCheckbox, setShowSaleCheckbox] = useState(false);
     const [selectImage, setSelectImage] = useState([]);
     const [brandDetail, setBrandDetail] = useState<IBrandDetail>();
-    const [shippingList, setShippingList] = useState<IShipping[]>([]);
+    // const [shippingList, setShippingList] = useState<IShipping[]>([]);
 
     const handleChangeSaleCheckbox = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.checked === true) {
@@ -102,22 +104,26 @@ function ProductDetail({ product, brand }: ProductDetailProps) {
         return { value: brandDetail?.id, label: brandDetail?.name }
     }, [brandDetail])
 
-    // useEffect(() => {
-    //     setShippingList(product?.shipping);
-    // }, [product])
+    // const handleAddShipping = (item: IShipping) => {
+    //     setShippingList([...shippingList, item]);
+    // }
 
-    const handleAddShipping = (item: IShipping) => {
-        setShippingList([...shippingList, item]);
-    }
+    // const handleRemoveShipping = (index: number) => {
+    //     shippingList.splice(index, 1);
+    //     setShippingList([...shippingList]);
+    // }
 
     const shippingValues: any = product?.shipping.map((item) => {
-        return {id: item.id, zone_name: item.zone_name, price: item.price};
+        return {id: item.id, zone_name: item.zone_name, price: numberFormat(item.price)};
     })
+
+    // const newImage = product?.images ? product.images.concat(selectImage) : selectImage;
 
     useEffect(() => {
         setValue('vendor_id', product?.vendor_id);
         setValue('name', product?.name);
         setValue('sku', product?.sku);
+        setValue('condition', product?.condition_id);
         setValue('price', String(product?.price));
         setValue('quantity', String(product?.quantity));
         setValue('sale_price', numberFormat(product?.sale_price));
@@ -127,17 +133,20 @@ function ProductDetail({ product, brand }: ProductDetailProps) {
         setValue('meta_keywords', product?.meta_keywords);
         setValue('product_page_title', product?.product_page_title);
         setValue('shipping', shippingValues);
-    }, [product, setValue, cateValueOptions, brandValueOptions, shippingValues])
+        setValue('imagesOrder', selectImage as any)
+    }, [product, setValue, cateValueOptions, brandValueOptions, shippingValues, selectImage])
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-          const fileArr = Array.from(e.target.files).map(file => URL.createObjectURL(file));
-          
-          setSelectImage(prev => prev.concat(fileArr as any));
-          
-          Array.from(e.target.files).map(file => URL.createObjectURL(file));
+            const fileArr = Array.from(e.target.files).map(file => URL.createObjectURL(file));
+
+            setSelectImage(prev => prev.concat(fileArr as any));
+
+            Array.from(e.target.files).map(file => URL.createObjectURL(file));
         }
+        //{ thumbs: [URL.createObjectURL(file)], file: URL.createObjectURL(file), id: Math.floor(Math.random() * 1000) }
     }
+    
     const handleRemoveImage = (index: number) => {
         selectImage.splice(index, 1);
         setSelectImage([...selectImage]);
@@ -154,8 +163,9 @@ function ProductDetail({ product, brand }: ProductDetailProps) {
     })
 
     const onSubmit = (data: any) => {
-        console.log(data);
+        onUpdateProduct(data);
     }
+
     return (
         <div>
             <Box>
@@ -232,7 +242,7 @@ function ProductDetail({ product, brand }: ProductDetailProps) {
                         <SelectField
                             name='condition'
                             control={control}
-                            options={[{ id: '1', name: 'Used' }]}
+                            options={[{ id: '294', name: 'Used' }]}
                             style={{ color: '#fff', backgroundColor: '#323259', flex: 1 }}
                         />
                     </div>
@@ -249,14 +259,14 @@ function ProductDetail({ product, brand }: ProductDetailProps) {
                     <div className="input-item">
                         <p className='label-name'>Image <span className='star'><sup>*</sup></span></p>
                         <Controller
+                            name='imagesOrder'
+                            control={control}
                             render={({ field }) => <UploadImage
                                 images={product?.images}
                                 selectImage={selectImage}
                                 onChangeImage={handleImageChange}
                                 onRemoveImage={handleRemoveImage}
                             />}
-                            name='imagesOrder'
-                            control={control}
                         />
                     </div>
                 
@@ -280,30 +290,6 @@ function ProductDetail({ product, brand }: ProductDetailProps) {
                                 )
                             }}
                         />
-                        {/* <FormControl fullWidth size='small' sx={{ margin: '10px 0'}}>
-                            <InputLabel id="demo-multiple-name-label">Category</InputLabel>
-                            <Select
-                                labelId="demo-multiple-name-label"
-                                id="demo-multiple-name"
-                                multiple
-                                defaultValue={product?.categories.map(item => item.category_id)}
-                                value={categoryData}
-                                onChange={handleChange}
-                                MenuProps={MenuProps}
-                                input={<OutlinedInput label="Category" />}
-                                style={{ color: '#fff', backgroundColor: '#323259'  }}
-                            >
-                                {categories.map((item) => (
-                                    <MenuItem
-                                        key={item.id}
-                                        value={item.name}
-                                        style={getStyles(item.name, categoryData, theme)}
-                                    >
-                                        {item.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl> */}
                     </div>
 
                     <div className="input-item">
@@ -343,7 +329,7 @@ function ProductDetail({ product, brand }: ProductDetailProps) {
                     <SelectField
                         name='memberships'
                         control={control}
-                        options={[{ id: 'general', name: 'General' }]}
+                        options={[{ id: '4', name: 'General' }]}
                         style={{ color: '#fff', backgroundColor: '#323259', flex: 1 }}
                     />
                 </div>
@@ -456,83 +442,96 @@ function ProductDetail({ product, brand }: ProductDetailProps) {
             <Box my={2}>
                 <Typography my={2} variant='h5' sx={{ color: '#fff' }} >Shipping</Typography>
                 <Box sx={{ width: '600px', marginLeft: '100px' }}>
-                    {
-                        product?.shipping.map((item) => (
-                            <div className='input-item' key={item.id}>
-                                <p className='label-name'>{item.zone_name} <span className='star'><sup>*</sup></span></p>
+                    {product?.shipping.map((item) => (
+                        <div className='input-item' key={item.id}>
+                            <p className='label-name'>{item.zone_name} <span className='star'><sup>*</sup></span></p>
+                            <Controller
+                                name='shipping'
+                                control={control}
+                                render={({ field }) => (
+                                    <FormControl sx={{ color: '#fff', backgroundColor: '#323259' }} fullWidth size='small' variant='outlined'>
+                                        <FilledInput
+                                            id="filled-adornment-amount"
+                                            size='small'
+                                            type='number'
+                                            value={numberFormat(item.price)}
+                                            onChange={(e) => field.onChange(e)}
+                                            startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                                        />
+                                    </FormControl>
+                                )}
+                            />
+                        </div>
+                    ))}
+                    
+                    {/* {shippingList.map((item, index: number) => (
+                        <div className="input-item" key={index}>
+                            <p className='label-name'>{item.zone_name}</p>
+                            <Box ml={-8} sx={{ display: 'flex', alignItems: 'center' }}>
                                 <Controller
                                     name='shipping'
                                     control={control}
                                     render={({ field }) => (
-                                        <FormControl sx={{ color: '#fff', backgroundColor: '#323259' }} fullWidth size='small' variant='outlined'>
+                                        <FormControl sx={{ color: '#fff', backgroundColor: '#323259', width: '250px' }} fullWidth size='small' variant='outlined'>
                                             <FilledInput
                                                 id="filled-adornment-amount"
-                                                size='small'
                                                 type='number'
-                                                value={numberFormat(item.price)}
+                                                value={field.value}
                                                 onChange={(e) => field.onChange(e)}
                                                 startAdornment={<InputAdornment position="start">$</InputAdornment>}
                                             />
                                         </FormControl>
                                     )}
                                 />
-                            </div>
-                        ))
-                    }
-                    {
-                        shippingList.map((item, index: number) => (
-                            <div className="input-item" key={index}>
-                                <p className='label-name'>{item.zone_name}</p>
-                                <Box ml={-8} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around'}}>
-                                    <Controller
-                                        name='shipping'
-                                        control={control}
-                                        render={({ field }) => (
-                                            <FormControl sx={{ color: '#fff', backgroundColor: '#323259', width: '250px' }} fullWidth size='small' variant='outlined'>
-                                                <FilledInput
-                                                    id="filled-adornment-amount"
-                                                    type='number'
-                                                    value={numberFormat(item.price)}
-                                                    onChange={(e) => field.onChange(e)}
-                                                    startAdornment={<InputAdornment position="start">$</InputAdornment>}
-                                                />
-                                            </FormControl>
-                                        )}
-                                    />
-                                    <Button
-                                        variant='outlined'
-                                        color='error'
-                                        size='small'
-                                        sx={{ width: '100px', fontSize: '10px' }}
-                                    >
-                                        remove
-                                    </Button>
-                                </Box>
-                            </div>
-                        ))
-                    }
+                                <Button
+                                    variant='outlined'
+                                    color='error'
+                                    size='small'
+                                    sx={{ width: '100px', fontSize: '10px', marginLeft: '50px' }}
+                                    onClick={() => handleRemoveShipping(index)}
+                                >
+                                    remove
+                                </Button>
+                            </Box>
+                        </div>
+                    ))} */}
                     
-                    <div className="input-item">
+                    
+                    {/* <div className="input-item">
                         <p className='label-name'></p>
-                        <Box ml={-8} sx={{ display: 'flex', alignItems: 'center'}}>
-                            <SelectField
-                                placeholder='Select new zone'
-                                name='shipping'
-                                control={control}
-                                options={shippings}
-                                style={{ color: '#fff', backgroundColor: '#323259', width: '250px' }}
-                            />
-                            <Button
-                                variant='outlined'
-                                color='success'
-                                size='small'
-                                sx={{ width: '170px', fontSize: '10px' }}
-                                onClick={() => handleAddShipping({id: 1, zone_name: 'abc', price: 1.20})}
-                            >
-                                Add shipping location
-                            </Button>
-                        </Box>
-                    </div>
+                        <Controller
+                            name='shipping'
+                            control={control}
+                            render={({ field }) => {
+                                return (
+                                    <Box ml={-8} sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <FormControl size='small' sx={{ color: '#fff', backgroundColor: '#323259', width: '250px' }}>
+                                            <MuiSelect
+                                                value={field.value}
+                                                onChange={(e) => field.onChange(e)}
+                                                inputProps={{ 'aria-label': 'Without label' }}
+                                                sx={{ color: '#fff' }}
+                                                placeholder='Select new zone'
+                                            >
+                                                {shippings.map((item) => (
+                                                    <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>
+                                                ))}
+                                            </MuiSelect>
+                                        </FormControl>
+                                                    
+                                        <Button
+                                            variant='outlined'
+                                            color='success'
+                                            size='small'
+                                            sx={{ width: '150px', fontSize: '10px', marginLeft: '20px' }}
+                                            onClick={() => handleAddShipping({ id: 1, zone_name: 'abc', price: 1.20 })}
+                                        >
+                                            Add shipping location
+                                        </Button>
+                                    </Box>
+                                )}}
+                        />
+                    </div> */}
                 </Box>
             </Box>
             {/* marketing */}
