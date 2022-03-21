@@ -35,7 +35,21 @@ export default function ProductDetailPage() {
         }
     }, [dispatch, id]);
 
-    const handleUpdateProduct = async (data: any) => {
+    const onUploadFile = async (file: File, productId: string, order: string) => {
+        const formData = new FormData();
+        formData.append('images', file);
+        formData.append('productId', productId);
+        formData.append('order', order);
+
+        await axios.post(API_PATHS.uploadImage, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: Cookies.get(ACCESS_TOKEN_KEY) || '',
+            }
+        });
+    }
+
+    const handleUpdateProduct = async (data: any, files: Array<File>) => {
         try {
             // setIsLoading(true);
             const values = {
@@ -71,9 +85,10 @@ export default function ProductDetailPage() {
                 imagesOrder: data.imagesOrder,
                 deleted_images: []
             }
+            console.log('values: ',values.imagesOrder);
 
             const formData = new FormData();
-            formData.append('productDetail', `${JSON.stringify(values)}`);
+            formData.append('productDetail', JSON.stringify(values));
 
             const response = await axios.post(`${API_PATHS.productAdmin}/create`, formData, {
                 headers: {
@@ -81,23 +96,15 @@ export default function ProductDetailPage() {
                     Authorization: Cookies.get(ACCESS_TOKEN_KEY) || '',
                 }
             });
-
-            const fileImage = new FormData();
-            fileImage.append('images', data.imagesOrder as any);
-            fileImage.append('productId', id);
-            
-            const json = await axios.post(API_PATHS.uploadImage, fileImage, {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-                Authorization: Cookies.get(ACCESS_TOKEN_KEY) || '',
-              }
-            })
-
-            console.log(data.imagesOrder);
-            console.log(response.data);
-            console.log(json.data);
             // setIsLoading(false);
+
             if (response.data?.success === true) {
+                const productId = response.data?.data;
+
+                await Promise.all(files.map(async (file, index) => {
+                    await onUploadFile(file, productId, index.toString());
+                }));
+
                 toast.success('Update product successfully');
             } else {
                 toast.error(response.data?.errors ? response.data?.errors : 'Something went wrong.');

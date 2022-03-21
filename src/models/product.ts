@@ -77,3 +77,15 @@ export interface IImage {
     file: string;
     thumbs: Array<string>;
 }
+
+export interface IProductFilter {
+    search: string;
+    category: string;
+    stock_status: string;
+    availability: string;
+    vendor: any;
+    sort: string;
+    order_by: 'ASC' | 'DESC';
+    search_type: string;
+}
+  

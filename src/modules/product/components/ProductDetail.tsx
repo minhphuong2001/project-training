@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useMemo, useState } from 'react'
+import React, { ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { Box } from '@mui/system'
 import InputField from '../../../components/FormField/InputField'
 import { useForm, Controller } from 'react-hook-form'
@@ -14,6 +14,8 @@ import {
     Button,
     Select as MuiSelect,
     MenuItem,
+    CardMedia,
+    Badge,
 } from '@mui/material';
 import AdapterMomentFns from '@mui/lab/AdapterMoment';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
@@ -23,7 +25,7 @@ import { SelectField } from '../../../components/FormField/SelectField';
 import UploadImage from '../../../components/UploadImage/UploadImage';
 import CustomToggle from '../../../components/FormField/CustomToggle/CustomToggle';
 import { IProductDetail, IShipping } from '../../../models/product';
-import { numberFormat } from '../../../utils/common';
+import { fileToBase64String, numberFormat } from '../../../utils/common';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppState } from '../../../redux/reducer';
 import EditDocument from '../../../components/EditDocument';
@@ -33,11 +35,19 @@ import { ThunkDispatch } from 'redux-thunk';
 import { Action } from 'typesafe-actions';
 import { fetchThunk } from '../../common/redux/thunk';
 import { API_PATHS } from '../../../configs/api';
+import { Close } from '@mui/icons-material';
+import { FileUploader } from 'react-drag-drop-files';
 
 export interface ProductDetailProps {
     product: IProductDetail;
     brand: IBrandData[];
-    onUpdateProduct: (data: any) => void;
+    onUpdateProduct: (data: any, files: Array<File>) => void;
+}
+
+const fileTypes = ['JPG', 'PNG', 'GIF', 'JPEG'];
+interface IFileImage {
+  file: File;
+  base64Src: string;
 }
 
 const initialValues = {
@@ -47,7 +57,6 @@ const initialValues = {
     condition: '',
     sku: '',
     categories: [],
-    imagesOrder: [],
     description: '',
     memberships: '',
     meta: '',
@@ -62,20 +71,24 @@ const initialValues = {
     shipping: [],
     facebook_marketing_enabled: false,
     google_feed_enabled: false,
+    imagesOrder: [],
+    deleted_images: []
 }
+
 
 function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) {  
     const dispatch = useDispatch<ThunkDispatch<AppState, null, Action<string>>>();
-    const { control, handleSubmit, setValue } = useForm({
+    const { control, handleSubmit, setValue, getValues } = useForm({
         defaultValues: initialValues,
         mode: 'all'
     });
     const { categories } = useSelector((state: AppState) => state.category);
     // const { shippings } = useSelector((state: AppState) => state.shipping);
     const [showSaleCheckbox, setShowSaleCheckbox] = useState(false);
-    const [selectImage, setSelectImage] = useState([]);
     const [brandDetail, setBrandDetail] = useState<IBrandDetail>();
+    // const [selectImage, setSelectImage] = useState([]);
     // const [shippingList, setShippingList] = useState<IShipping[]>([]);
+    const [files, setFiles] = useState<IFileImage[]>([]);
 
     const handleChangeSaleCheckbox = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.checked === true) {
@@ -119,6 +132,78 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
 
     // const newImage = product?.images ? product.images.concat(selectImage) : selectImage;
 
+    // const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     if (e.target.files) {
+    //         const fileArr = Array.from(e.target.files).map(file => URL.createObjectURL(file));
+
+    //         setSelectImage(prev => prev.concat(fileArr as any));
+
+    //         Array.from(e.target.files).map(file => URL.createObjectURL(file));
+    //     }
+    //     //{ thumbs: [URL.createObjectURL(file)], file: URL.createObjectURL(file), id: Math.floor(Math.random() * 1000) }
+    // }
+    
+    // const handleRemoveImage = (index: number) => {
+    //     selectImage.splice(index, 1);
+    //     setSelectImage([...selectImage]);
+    // }
+
+    const addFile = useCallback(async (file: File) => {
+        const base64String = await fileToBase64String(file);
+        const fileArray = [...files].find((item) => item.base64Src === base64String);
+        if (fileArray) {
+            return;
+        }
+        setFiles((prev) => {
+            const newFiles = [...prev].filter(item => item.base64Src !== base64String);
+            newFiles.push({ file, base64Src: base64String });
+            return newFiles;
+        })
+    }, [files]);
+
+    const removeFile = (base64Src: string) => {
+        setFiles((prev) => {
+            const newFiles = [...prev].filter((item) => item.base64Src !== base64Src);
+            return newFiles;
+        })
+    }
+
+    const handleAddFiles = (files: FileList) => {
+        Array.from(files).map((file) => addFile(file));
+    }
+
+    const isDeletedImage = (id: string) => {
+        return [...getValues("deleted_images")].some((item) => item === id);
+    }
+    
+    const handleRemoveImage = useCallback((id: string) => {
+        const image = [...product?.images].find((item) => item.id === id);
+        if (!image) {
+            return;
+        }
+        const newImagesOrder = [...getValues("imagesOrder")].filter((item) => item !== image.file);
+        const newDeletedImage = [...getValues("deleted_images"), id];
+
+        setValue('deleted_images', newDeletedImage as never[]);
+        setValue('imagesOrder', newImagesOrder);
+    }, [setValue, getValues, product?.images])
+
+    const categoryOptions: any = categories.map(function (cate) {
+        return { value: cate.id, label: cate.name }
+    });
+    const colourStyles = {
+        control: (styles: any) => ({ ...styles, backgroundColor: '#323259', flex: 1}),
+    };
+    const brandOptions: any = brand.map(function (item) {
+        return { value: item?.id, label: item?.name }
+    })
+
+    const onSubmit = (data: any) => {
+        onUpdateProduct(data, files.map((item) => item.file));
+    }
+
+    const newImagesOrder = product?.images.map(item => item.file).concat(files.map(item => item.file.name));
+
     useEffect(() => {
         setValue('vendor_id', product?.vendor_id);
         setValue('name', product?.name);
@@ -133,38 +218,8 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
         setValue('meta_keywords', product?.meta_keywords);
         setValue('product_page_title', product?.product_page_title);
         setValue('shipping', shippingValues);
-        setValue('imagesOrder', selectImage as any)
-    }, [product, setValue, cateValueOptions, brandValueOptions, shippingValues, selectImage])
-
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            const fileArr = Array.from(e.target.files).map(file => URL.createObjectURL(file));
-
-            setSelectImage(prev => prev.concat(fileArr as any));
-
-            Array.from(e.target.files).map(file => URL.createObjectURL(file));
-        }
-        //{ thumbs: [URL.createObjectURL(file)], file: URL.createObjectURL(file), id: Math.floor(Math.random() * 1000) }
-    }
-    
-    const handleRemoveImage = (index: number) => {
-        selectImage.splice(index, 1);
-        setSelectImage([...selectImage]);
-    }
-    
-    const categoryOptions: any = categories.map(function (cate) {
-        return { value: cate.id, label: cate.name }
-    });
-    const colourStyles = {
-        control: (styles: any) => ({ ...styles, backgroundColor: '#323259', flex: 1}),
-    };
-    const brandOptions: any = brand.map(function (item) {
-        return { value: item?.id, label: item?.name }
-    })
-
-    const onSubmit = (data: any) => {
-        onUpdateProduct(data);
-    }
+        setValue('imagesOrder', newImagesOrder as never[]);
+    }, [product, setValue, cateValueOptions, brandValueOptions, shippingValues, newImagesOrder])
 
     return (
         <div>
@@ -261,12 +316,89 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
                         <Controller
                             name='imagesOrder'
                             control={control}
-                            render={({ field }) => <UploadImage
-                                images={product?.images}
-                                selectImage={selectImage}
-                                onChangeImage={handleImageChange}
-                                onRemoveImage={handleRemoveImage}
-                            />}
+                            render={({ field }) =>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        justifyContent: 'flex-start',
+                                        alignItems: 'center',
+                                        width: 1,
+                                        flexWrap: 'wrap',
+                                        marginTop: '10px'
+                                    }}
+                                >
+                                    {product?.images.map((item) => {
+                                        if (isDeletedImage(item.id)) return null;
+                                        return (
+                                            <Badge
+                                                key={item.file}
+                                                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                                                sx={{ mr: 2 }}
+                                                badgeContent={
+                                                    <Box
+                                                        onClick={(e) => handleRemoveImage(item.id)}
+                                                        sx={{
+                                                            backgroundColor: '#fff',
+                                                            display: 'flex',
+                                                            alignItem: 'center',
+                                                            justifyContent: 'center',
+                                                            borderRadius: '50%',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        <Close sx={{ color: 'red', fontSize: '18px' }}/>
+                                                    </Box>
+                                                }
+                                            >
+                                                <CardMedia
+                                                    component="img"
+                                                    sx={{ width: 120, height: 120, cursor: 'pointer', marginBottom: '1rem'}}
+                                                    src={item.thumbs[0] || 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Circle-icons-camera.svg/800px-Circle-icons-camera.svg.png'}
+                                                />
+                                            </Badge>
+                                        );
+                                    })}
+                                    {files.map((item) => {
+                                        return (
+                                            <Badge
+                                                key={item.base64Src}
+                                                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                                                sx={{ mr: 2 }}
+                                                badgeContent={
+                                                    <Box
+                                                        onClick={(e) => removeFile(item.base64Src)}
+                                                        sx={{
+                                                            backgroundColor: '#fff',
+                                                            display: 'flex',
+                                                            alignItem: 'center',
+                                                            justifyContent: 'center',
+                                                            borderRadius: '50%',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        <Close sx={{ color: 'red', fontSize: '18px' }}/>
+                                                    </Box>
+                                                }
+                                            >
+                                                <CardMedia
+                                                    component="img"
+                                                    sx={{ width: 120, height: 120, marginBottom: '1rem', cursor: 'pointer' }}
+                                                    src={item.base64Src}
+                                                />
+                                            </Badge>
+                                        );
+                                    })}
+                                    <FileUploader multiple handleChange={handleAddFiles} name="file" types={fileTypes}>
+                                        <Box mt={-2} sx={{ minHeight: 120, width: 120, border: '1px dashed #fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <CardMedia
+                                                component="img"
+                                                sx={{ width: 80, height: 80, cursor: 'pointer', padding: '10px' }}
+                                                src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Circle-icons-camera.svg/800px-Circle-icons-camera.svg.png"
+                                            />
+                                        </Box>
+                                    </FileUploader>
+                                </Box>
+                            }
                         />
                     </div>
                 

@@ -26,3 +26,17 @@ export function numberFormat(number: any, decimals = 2, dec_point = '.', thousan
   
     return s.join(dec);
 }
+
+export const fileToBase64String = (file: File): Promise<string> => {
+  return new Promise((resolve) => {
+    let baseURL = '';
+    const reader = new FileReader();
+
+    reader.readAsDataURL(file);
+
+    reader.onload = () => {
+      baseURL = reader.result ? reader.result.toString() : '';
+      resolve(baseURL);
+    };
+  });
+};

@@ -111,6 +111,7 @@ export default function ProductPage() {
 
             setIsLoading(false);
             setProductList([...products.data.filter(a => a.id !== id)]);
+            toast.success('Delete successfully');
         } catch (error: any) {
             console.log(error.message);
         }
@@ -139,7 +140,7 @@ export default function ProductPage() {
             setIsLoading(false);
             if (response.data?.success === true) {
                 dispatch(setProductData(json));
-                toast.success('Update successfully')
+                toast.success('Update successfully');
             }
         } catch (error: any) {
             console.log(error?.message);

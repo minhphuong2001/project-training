@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { Box } from '@mui/system'
 import InputField from '../../../components/FormField/InputField'
 import { useForm, Controller } from 'react-hook-form'
@@ -13,9 +13,11 @@ import {
   InputAdornment,
   FilledInput,
   TextField,
-  CircularProgress
+  CircularProgress,
+  Badge,
+  CardMedia
 } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import { ArrowBack, Close } from '@mui/icons-material';
 import AdapterMomentFns from '@mui/lab/AdapterMoment';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import DatePicker from '@mui/lab/DatePicker';
@@ -23,7 +25,6 @@ import '../components/product.scss'
 import { SelectField } from '../../../components/FormField/SelectField';
 import { useHistory } from 'react-router';
 import { ROUTES } from '../../../configs/routes';
-import UploadImage from '../../../components/UploadImage/UploadImage';
 import CustomToggle from '../../../components/FormField/CustomToggle/CustomToggle';
 import { useSelector } from 'react-redux';
 import { AppState } from '../../../redux/reducer';
@@ -36,13 +37,21 @@ import { API_PATHS } from '../../../configs/api';
 import Cookies from 'js-cookie';
 import { ACCESS_TOKEN_KEY } from '../../../utils/constants';
 import { toast, ToastContainer } from 'react-toastify';
+import { FileUploader } from 'react-drag-drop-files';
+import { fileToBase64String } from '../../../utils/common';
+
+const fileTypes = ['JPG', 'PNG', 'GIF', 'JPEG'];
+interface IFileImage {
+  file: File;
+  base64Src: string;
+}
 
 const initialValue = {
   vendor_id: {},
   name: '',
   brand: '',
   condition: '',
-  sku: '1646235088515',
+  sku: Math.floor(Math.random() * 100000000),
   categories: [],
   imagesOrder: [],
   description: '',
@@ -68,9 +77,35 @@ export default function AddProductPage() {
   const { categories } = useSelector((state: AppState) => state.category);
   const { vendors } = useSelector((state: AppState) => state.vendor);
   const [showSaleCheckbox, setShowSaleCheckbox] = useState(false);
-
-  const [selectImage, setSelectImage] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [files, setFiles] = useState<Array<IFileImage>>([]);
+
+  const addFile = useCallback(
+    async (file: File) => {
+      const base64String = await fileToBase64String(file);
+      const fileAlreadyIn = [...files].find((item) => item.base64Src === base64String);
+      if (fileAlreadyIn) {
+        return;
+      }
+      setFiles((prevFiles) => {
+        const newFiles = [...prevFiles].filter((item) => item.base64Src !== base64String);
+        newFiles.push({ file, base64Src: base64String });
+        return newFiles;
+      });
+    },
+    [files],
+  );
+
+  const removeFile = useCallback((base64Src: string) => {
+    setFiles((prevFiles) => {
+      const newFiles = [...prevFiles].filter((item) => item.base64Src !== base64Src);
+      return newFiles;
+    });
+  }, []);
+
+  const handleAddFiles = (multipleFile: FileList) => {
+    Array.from(multipleFile).map((file) => addFile(file));
+  };
 
   const validationSchema = Yup.object().shape({
     vendor_id: Yup.object()
@@ -111,24 +146,27 @@ export default function AddProductPage() {
     control: (styles: any) => ({ ...styles, backgroundColor: '#323259', flex: 1}),
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const fileArr = Array.from(e.target.files).map(file => URL.createObjectURL(file));
+  const onUploadFile = async (file: File, productId: string, order: string) => {
+    const formData = new FormData();
+    formData.append('images', file);
+    formData.append('productId', productId);
+    formData.append('order', order);
 
-      setSelectImage(prev => prev.concat(fileArr as any));
+    const response = await axios.post(API_PATHS.uploadImage, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Authorization: Cookies.get(ACCESS_TOKEN_KEY) || '',
+      }
+    });
 
-      Array.from(e.target.files).map(file => URL.createObjectURL(file));
-    }
-  }
-  const handleRemoveImage = (index: number) => {
-    selectImage.splice(index, 1);
-    setSelectImage([...selectImage]);
+    console.log(response.data);
   }
 
   const onSubmit = async (data: any) => {
     try {
       setIsLoading(true);
       const formData = new FormData();
+
       const values = {
         vendor_id: data?.vendor_id.value,
         brand_id: data.brand,
@@ -155,36 +193,35 @@ export default function AddProductPage() {
         product_page_title: data.product_page_title,
         facebook_marketing_enabled: data.facebook_marketing_enabled === false ? 0 : 1,
         google_feed_enabled: data.google_feed_enabled === false ? 0 : 1,
-        imagesOrder: selectImage
+        imagesOrder: [...files].map(file => file.file.name),
+        deleted_images: []
       }
 
-      formData.append('productDetail', `${JSON.stringify(values)}`);
+      formData.append('productDetail', JSON.stringify(values));
       const response = await axios.post(`${API_PATHS.productAdmin}/create`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: Cookies.get(ACCESS_TOKEN_KEY) || '',
         }
-      })
+      });
 
-      // const fileImage = new FormData();
-      // fileImage.append('images', selectImage as any);
-      // fileImage.append('productId', '5165');
-      // const json = await axios.post(API_PATHS.uploadImage, fileImage, {
-      //   headers: {
-      //     'Content-Type': 'multipart/form-data',
-      //     Authorization: Cookies.get(ACCESS_TOKEN_KEY) || '',
-      //   }
-      // })
-      
       setIsLoading(false);
+      
       if (response.data?.success === true) {
+        const productId = response.data?.data;
+        const file: File[] = files.map(item => item.file);
+
+        await Promise.all(file.map(async (file, index) => {
+          await onUploadFile(file, productId, index.toString());
+        }));
+
         toast.success('Add product successfully');
         setTimeout(() => {
-          history.push(`${ROUTES.product}/product-detail/${response.data?.data}`);
-        }, 2500);
+          history.push(`${ROUTES.product}/product-detail/${productId}`);
+        }, 2000);
       
       } else {
-        toast.error('Something went wrong');
+        toast.error(response.data?.errors ? response.data?.errors : 'Something went wrong.');
       }
     } catch (error: any) {
       console.log(error?.message);
@@ -284,13 +321,66 @@ export default function AddProductPage() {
           <div className="input-item">
             <p className='label-name'>Image <span className='star'><sup>*</sup></span></p>
             <Controller
-              render={({ field }) => <UploadImage
-                selectImage={selectImage}
-                onChangeImage={handleImageChange}
-                onRemoveImage={handleRemoveImage}
-              />}
               name='imagesOrder'
               control={control}
+              render={({ field }) =>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-start',
+                    alignItems: 'center',
+                    width: 1,
+                    flexWrap: 'wrap',
+                    marginTop: '10px'
+                  }}
+                >
+                {files.map((item) => {
+                  return (
+                    <Badge
+                      key={item.base64Src}
+                      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                      sx={{ mr: 2 }}
+                      badgeContent={
+                        <Box
+                          onClick={(e) => removeFile(item.base64Src)}
+                          sx={{
+                            backgroundColor: '#fff',
+                            display: 'flex',
+                            alignItem: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '50%',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <Close sx={{ color: 'red', fontSize: '18px' }}/>
+                        </Box>
+                      }
+                    >
+                      <Box sx={{
+                        minHeight: 120,
+                        cursor: 'pointer',
+                        marginBottom: '1rem',
+                      }}>
+                        <CardMedia
+                          component="img"
+                          sx={{ width: 120, height: 120, objectFit: 'cover' }}
+                          src={item.base64Src}
+                        />
+                      </Box>
+                    </Badge>
+                  );
+                })}
+                  <FileUploader multiple handleChange={handleAddFiles} name="file" types={fileTypes}>
+                    <Box mt={-2} sx={{ minHeight: 120, width: 120, border: '1px dashed #fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <CardMedia
+                        component="img"
+                        sx={{ width: 80, height: 80, cursor: 'pointer', padding: '10px' }}
+                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Circle-icons-camera.svg/800px-Circle-icons-camera.svg.png"
+                      />
+                    </Box>
+                  </FileUploader>
+                </Box>
+              }
             />
           </div>
     
