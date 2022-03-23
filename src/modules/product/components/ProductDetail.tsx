@@ -22,7 +22,6 @@ import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import DatePicker from '@mui/lab/DatePicker';
 import '../components/product.scss'
 import { SelectField } from '../../../components/FormField/SelectField';
-import UploadImage from '../../../components/UploadImage/UploadImage';
 import CustomToggle from '../../../components/FormField/CustomToggle/CustomToggle';
 import { IProductDetail, IShipping } from '../../../models/product';
 import { fileToBase64String, numberFormat } from '../../../utils/common';
@@ -67,8 +66,10 @@ const initialValues = {
     quantity: '',
     price: '',
     sale_price: '',
+    sale_price_type: '',
     arriveDate: new Date(),
     shipping: [],
+    shipping_to_zones: [{id: '', name_zones: '', price: '0.00'}],
     facebook_marketing_enabled: false,
     google_feed_enabled: false,
     imagesOrder: [],
@@ -83,11 +84,11 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
         mode: 'all'
     });
     const { categories } = useSelector((state: AppState) => state.category);
-    // const { shippings } = useSelector((state: AppState) => state.shipping);
+    const { shippings } = useSelector((state: AppState) => state.shipping);
     const [showSaleCheckbox, setShowSaleCheckbox] = useState(false);
     const [brandDetail, setBrandDetail] = useState<IBrandDetail>();
-    // const [selectImage, setSelectImage] = useState([]);
-    // const [shippingList, setShippingList] = useState<IShipping[]>([]);
+    const [shippingList, setShippingList] = useState<IShipping[]>([]);
+    const [shippingItem, setShippingItem] = useState<IShipping>();
     const [files, setFiles] = useState<IFileImage[]>([]);
 
     const handleChangeSaleCheckbox = (e: ChangeEvent<HTMLInputElement>) => {
@@ -117,36 +118,18 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
         return { value: brandDetail?.id, label: brandDetail?.name }
     }, [brandDetail])
 
-    // const handleAddShipping = (item: IShipping) => {
-    //     setShippingList([...shippingList, item]);
-    // }
+    const handleAddShipping = (item: IShipping) => {
+        setShippingList([...shippingList, item]);
+    }
 
-    // const handleRemoveShipping = (index: number) => {
-    //     shippingList.splice(index, 1);
-    //     setShippingList([...shippingList]);
-    // }
+    const handleRemoveShipping = (index: number) => {
+        shippingList.splice(index, 1);
+        setShippingList([...shippingList]);
+    }
 
     const shippingValues: any = product?.shipping.map((item) => {
         return {id: item.id, zone_name: item.zone_name, price: numberFormat(item.price)};
     })
-
-    // const newImage = product?.images ? product.images.concat(selectImage) : selectImage;
-
-    // const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    //     if (e.target.files) {
-    //         const fileArr = Array.from(e.target.files).map(file => URL.createObjectURL(file));
-
-    //         setSelectImage(prev => prev.concat(fileArr as any));
-
-    //         Array.from(e.target.files).map(file => URL.createObjectURL(file));
-    //     }
-    //     //{ thumbs: [URL.createObjectURL(file)], file: URL.createObjectURL(file), id: Math.floor(Math.random() * 1000) }
-    // }
-    
-    // const handleRemoveImage = (index: number) => {
-    //     selectImage.splice(index, 1);
-    //     setSelectImage([...selectImage]);
-    // }
 
     const addFile = useCallback(async (file: File) => {
         const base64String = await fileToBase64String(file);
@@ -204,6 +187,10 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
 
     const newImagesOrder = product?.images.map(item => item.file).concat(files.map(item => item.file.name));
 
+    const shippingZonesValue = shippingList.map(item => {
+        return { id: item.id, zone_name: item.zone_name, price: 0.00 }
+    })
+
     useEffect(() => {
         setValue('vendor_id', product?.vendor_id);
         setValue('name', product?.name);
@@ -218,8 +205,10 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
         setValue('meta_keywords', product?.meta_keywords);
         setValue('product_page_title', product?.product_page_title);
         setValue('shipping', shippingValues);
+        setValue('shipping_to_zones', shippingZonesValue as never[]);
         setValue('imagesOrder', newImagesOrder as never[]);
-    }, [product, setValue, cateValueOptions, brandValueOptions, shippingValues, newImagesOrder])
+        setValue('sale_price_type', product?.sale_price_type);
+    }, [product, setValue, cateValueOptions, brandValueOptions, shippingValues, newImagesOrder, shippingZonesValue])
 
     return (
         <div>
@@ -485,14 +474,14 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
 
                 <div className='input-item'>
                     <p className='label-name'>Price <span className='star'><sup>*</sup></span></p>
-                    <Box sx={{ flex: 1, display: 'flex', marginLeft: '-60px'}}>
+                    <Box sx={{ flex: 1, display: 'flex', marginLeft: showSaleCheckbox ? '110px' : '-60px'}}>
                         <Controller
                             name='price'
                             control={control}
                             render={({ field }) => (
                                 <FormControl sx={{ width: '150px', color: '#fff', backgroundColor: '#323259', marginRight: '20px' }} size='small' variant='outlined'>
                                     <FilledInput
-                                        id="filled-adornment-amount"
+                                        id="price"
                                         size='small'
                                         type='number'
                                         startAdornment={<InputAdornment position='end'>$</InputAdornment>}
@@ -510,21 +499,41 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
                         </FormGroup> 
                     </Box>
                     {showSaleCheckbox ?
-                        <Controller
-                            name='sale_price'
-                            control={control}
-                            render={({ field }) => (
-                                <FormControl sx={{ width: '150px', color: '#fff', backgroundColor: '#323259' }} size='small' variant='outlined'>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Controller
+                                name='sale_price_type'
+                                control={control}
+                                render={({ field }) => (
+                                    <TextField
+                                        id="filled-select-currency"
+                                        size='small'
+                                        select
+                                        value={field.value}
+                                        onChange={(e) => field.onChange(e)}
+                                        variant="filled"
+                                        sx={{ color: '#fff', backgroundColor: '#323259', width: '100px', marginRight: '1px' }}
+                                    >
+                                        <MenuItem value='$'>$</MenuItem>
+                                        <MenuItem value='%'>%</MenuItem>
+                                    </TextField>
+                                )}
+                            />
+                            <Controller
+                                name='sale_price'
+                                control={control}
+                                render={({ field }) => (
+                                    <FormControl sx={{ width: '200px', color: '#fff', backgroundColor: '#323259' }} size='small' variant='outlined'>
                                     <FilledInput
-                                        id="filled-adornment-amount"
+                                        id="sale_price"
                                         size='small'
                                         type='number'
                                         startAdornment={<InputAdornment position='end'>$</InputAdornment>}
                                         {...field}
                                     />
-                                </FormControl>
-                            )}
-                        /> : null} 
+                                    </FormControl>
+                                )}
+                            />
+                        </Box> : null} 
                 </div>
 
                 <div style={{ marginTop: '20px'}}>
@@ -576,17 +585,18 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
                 <Box sx={{ width: '600px', marginLeft: '100px' }}>
                     {product?.shipping.map((item) => (
                         <div className='input-item' key={item.id}>
-                            <p className='label-name'>{item.zone_name} <span className='star'><sup>*</sup></span></p>
+                            <p className='label-name'>{item.zone_name}<span className='star'><sup>*</sup></span></p>
                             <Controller
+                                key={item.id}
                                 name='shipping'
                                 control={control}
                                 render={({ field }) => (
                                     <FormControl sx={{ color: '#fff', backgroundColor: '#323259' }} fullWidth size='small' variant='outlined'>
                                         <FilledInput
-                                            id="filled-adornment-amount"
+                                            id="shipping"
                                             size='small'
                                             type='number'
-                                            value={numberFormat(item.price)}
+                                            value={field.value}
                                             onChange={(e) => field.onChange(e)}
                                             startAdornment={<InputAdornment position="start">$</InputAdornment>}
                                         />
@@ -596,20 +606,20 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
                         </div>
                     ))}
                     
-                    {/* {shippingList.map((item, index: number) => (
+                    {shippingList.map((item, index: number) => (
                         <div className="input-item" key={index}>
                             <p className='label-name'>{item.zone_name}</p>
                             <Box ml={-8} sx={{ display: 'flex', alignItems: 'center' }}>
                                 <Controller
-                                    name='shipping'
+                                    name='shipping_to_zones'
                                     control={control}
                                     render={({ field }) => (
                                         <FormControl sx={{ color: '#fff', backgroundColor: '#323259', width: '250px' }} fullWidth size='small' variant='outlined'>
                                             <FilledInput
-                                                id="filled-adornment-amount"
+                                                id="shipping-zones"
                                                 type='number'
-                                                value={field.value}
-                                                onChange={(e) => field.onChange(e)}
+                                                value={item.price}
+                                                onChange={(e) => field.onChange(e.target.value)}
                                                 startAdornment={<InputAdornment position="start">$</InputAdornment>}
                                             />
                                         </FormControl>
@@ -626,13 +636,12 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
                                 </Button>
                             </Box>
                         </div>
-                    ))} */}
+                    ))}
                     
-                    
-                    {/* <div className="input-item">
+                    <div className="input-item">
                         <p className='label-name'></p>
                         <Controller
-                            name='shipping'
+                            name='shipping_to_zones'
                             control={control}
                             render={({ field }) => {
                                 return (
@@ -646,7 +655,13 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
                                                 placeholder='Select new zone'
                                             >
                                                 {shippings.map((item) => (
-                                                    <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>
+                                                    <MenuItem
+                                                        key={item.id}
+                                                        value={item.id}
+                                                        onClick={() => setShippingItem({ id: item.id, zone_name: item.name, price: 0.00 })}
+                                                    >
+                                                        {item.name}
+                                                    </MenuItem>
                                                 ))}
                                             </MuiSelect>
                                         </FormControl>
@@ -656,14 +671,14 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
                                             color='success'
                                             size='small'
                                             sx={{ width: '150px', fontSize: '10px', marginLeft: '20px' }}
-                                            onClick={() => handleAddShipping({ id: 1, zone_name: 'abc', price: 1.20 })}
+                                            onClick={() => handleAddShipping(shippingItem as IShipping)}
                                         >
                                             Add shipping location
                                         </Button>
                                     </Box>
                                 )}}
                         />
-                    </div> */}
+                    </div>
                 </Box>
             </Box>
             {/* marketing */}

@@ -1,3 +1,5 @@
+import { DateRange } from "@mui/lab";
+
 export interface AuthToken {
   accessToken: string;
   expiresIn: number;
@@ -95,4 +97,20 @@ export interface IUserProfileDetail {
 interface AccountRole {
   id: number | string;
   name: string;
+}
+
+export interface IUserFilter {
+  search: string;
+  memberships: Array<string>;
+  types: Array<string>;
+  status: string;
+  country: string;
+  state: string;
+  address: string;
+  phone: string;
+  date_type: string;
+  date_range: DateRange<Date>;
+  sort: string;
+  order_by: 'ASC' | 'DESC';
+  tz: number;
 }

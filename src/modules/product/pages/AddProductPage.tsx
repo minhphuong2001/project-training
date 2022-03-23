@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 import { Box } from '@mui/system'
 import InputField from '../../../components/FormField/InputField'
 import { useForm, Controller } from 'react-hook-form'
@@ -15,7 +15,11 @@ import {
   TextField,
   CircularProgress,
   Badge,
-  CardMedia
+  CardMedia,
+  Select as MuiSelect,
+  MenuItem,
+  Grid,
+  Autocomplete
 } from '@mui/material';
 import { ArrowBack, Close } from '@mui/icons-material';
 import AdapterMomentFns from '@mui/lab/AdapterMoment';
@@ -39,6 +43,7 @@ import { ACCESS_TOKEN_KEY } from '../../../utils/constants';
 import { toast, ToastContainer } from 'react-toastify';
 import { FileUploader } from 'react-drag-drop-files';
 import { fileToBase64String } from '../../../utils/common';
+import { IShipping } from '../../../models/product';
 
 const fileTypes = ['JPG', 'PNG', 'GIF', 'JPEG'];
 interface IFileImage {
@@ -60,13 +65,14 @@ const initialValue = {
   meta_description: '',
   meta_keywords: '',
   tax_exempt: 0,
-  zone: '',
   product_page_title: '',
   quantity: 0,
   price: 0.0000,
   sale_price: 0.0000,
+  sale_price_type: '$',
   arriveDate: new Date(),
-  shipping: 0.0000,
+  shipping: [{ id: 1, zone_name: 'Continental U.S.', price: '0.00' }],
+  shipping_to_zones: [],
   facebook_marketing_enabled: 0,
   google_feed_enabled: 0,
 }
@@ -76,25 +82,26 @@ export default function AddProductPage() {
   const { brands } = useSelector((state: AppState) => state.brand);
   const { categories } = useSelector((state: AppState) => state.category);
   const { vendors } = useSelector((state: AppState) => state.vendor);
+  const { shippings } = useSelector((state: AppState) => state.shipping);
   const [showSaleCheckbox, setShowSaleCheckbox] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [files, setFiles] = useState<Array<IFileImage>>([]);
 
-  const addFile = useCallback(
-    async (file: File) => {
-      const base64String = await fileToBase64String(file);
-      const fileAlreadyIn = [...files].find((item) => item.base64Src === base64String);
-      if (fileAlreadyIn) {
-        return;
-      }
-      setFiles((prevFiles) => {
-        const newFiles = [...prevFiles].filter((item) => item.base64Src !== base64String);
-        newFiles.push({ file, base64Src: base64String });
-        return newFiles;
-      });
-    },
-    [files],
-  );
+  const [shippingList, setShippingList] = useState<IShipping[]>([]);
+  const [shippingItem, setShippingItem] = useState<IShipping>();
+
+  const addFile = useCallback(async (file: File) => {
+    const base64String = await fileToBase64String(file);
+    const findFile = [...files].find((item) => item.base64Src === base64String);
+    if (findFile) {
+      return;
+    }
+    setFiles((prevFiles) => {
+      const newFiles = [...prevFiles].filter((item) => item.base64Src !== base64String);
+      newFiles.push({ file, base64Src: base64String });
+      return newFiles;
+    });
+  }, [files]);
 
   const removeFile = useCallback((base64Src: string) => {
     setFiles((prevFiles) => {
@@ -103,9 +110,17 @@ export default function AddProductPage() {
     });
   }, []);
 
-  const handleAddFiles = (multipleFile: FileList) => {
-    Array.from(multipleFile).map((file) => addFile(file));
+  const handleAddFiles = (multiFile: FileList) => {
+    Array.from(multiFile).map((file) => addFile(file));
   };
+
+  const handleAddShipping = (item: IShipping) => {
+    setShippingList([...shippingList, item]);
+  }
+  const handleRemoveShipping = (index: number) => {
+    shippingList.splice(index, 1);
+    setShippingList([...shippingList]);
+  }
 
   const validationSchema = Yup.object().shape({
     vendor_id: Yup.object()
@@ -122,7 +137,7 @@ export default function AddProductPage() {
       .required('This field is required.'),
   });
   
-  const { control, handleSubmit } = useForm({
+  const { control, handleSubmit, setValue } = useForm({
     defaultValues: initialValue,
     resolver: yupResolver(validationSchema),
     mode: 'all'
@@ -143,7 +158,7 @@ export default function AddProductPage() {
       return { value: cate.id, label: cate.name }
   });
   const colourStyles = {
-    control: (styles: any) => ({ ...styles, backgroundColor: '#323259', flex: 1}),
+    control: (styles: any) => ({ ...styles, backgroundColor: '#323259', color: '#fff', flex: 1}),
   };
 
   const onUploadFile = async (file: File, productId: string, order: string) => {
@@ -159,7 +174,7 @@ export default function AddProductPage() {
       }
     });
 
-    console.log(response.data);
+    console.log('file: ', response.data);
   }
 
   const onSubmit = async (data: any) => {
@@ -178,8 +193,9 @@ export default function AddProductPage() {
         memberships: data.memberships,
         tax_exempt: data.tax_exempt,
         price: data.price,
-        sale_price_type: '$',
+        sale_price_type: data.sale_price_type,
         sale_price: data.sale_price,
+        shipping_to_zones: [{ id: 1, zone_name: 'Continental U.S.', price: data.shipping }],
         arrival_date: data.arriveDate,
         inventory_tracking: 0,
         quantity: data.quantity,
@@ -196,7 +212,7 @@ export default function AddProductPage() {
         imagesOrder: [...files].map(file => file.file.name),
         deleted_images: []
       }
-
+      console.log(values);
       formData.append('productDetail', JSON.stringify(values));
       const response = await axios.post(`${API_PATHS.productAdmin}/create`, formData, {
         headers: {
@@ -227,6 +243,29 @@ export default function AddProductPage() {
       console.log(error?.message);
     }
   }
+
+  // const handleAddShippingZone = (id: number) => {
+  //   if (!id) {
+  //     return;
+  //   }
+  //   const isShippingZone = [...getValues('shipping_to_zones')].some(item => item.id === id);
+  //   if (isShippingZone) {
+  //     return;
+  //   }
+  //   setValue('shipping_to_zones', [...getValues('shipping_to_zones'), { id, price: '0.00' }]);
+  // }
+
+  // const handleRemoveShippingZone = (id: number) => {
+  //   if (id === 1) {
+  //     return;
+  //   }
+  //   const newShippingZones = [...getValues('shipping_to_zones')].filter((item) => item.id !== id);
+  //   setValue('shipping_to_zones', newShippingZones);
+  // };
+
+  useEffect(() => {
+    setValue('imagesOrder', [...files].map(file => file.file.name) as never[]);
+  }, [setValue, files])
 
   return (
     <div>
@@ -467,7 +506,7 @@ export default function AddProductPage() {
 
           <div className='input-item'>
             <p className='label-name'>Price <span className='star'><sup>*</sup></span></p>
-            <Box sx={{ flex: 1, display: 'flex', marginLeft: '-60px' }}>
+            <Box sx={{ flex: 1, display: 'flex', marginLeft: showSaleCheckbox ? '110px' : '-60px' }}>
               <Controller
                 name='price'
                 control={control}
@@ -492,21 +531,41 @@ export default function AddProductPage() {
               </FormGroup>
             </Box>
             {showSaleCheckbox ?
-              <Controller
-                name='sale_price'
-                control={control}
-                render={({ field }) => (
-                  <FormControl sx={{ width: '150px', color: '#fff', backgroundColor: '#323259' }} size='small' variant='outlined'>
-                    <FilledInput
-                      id="filled-adornment-amount"
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Controller
+                  name='sale_price_type'
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      id="filled-select-currency"
                       size='small'
-                      type='number'
-                      startAdornment={<InputAdornment position='end'>$</InputAdornment>}
-                      {...field}
-                    />
-                  </FormControl>
-                )}
-              /> : null} 
+                      select
+                      value={field.value}
+                      onChange={field.onChange}
+                      variant="filled"
+                      sx={{ color: '#fff', backgroundColor: '#323259', width: '100px', marginRight: '1px' }}
+                    >
+                      <MenuItem value='$'>$</MenuItem>
+                      <MenuItem value='%'>%</MenuItem>
+                    </TextField>
+                  )}
+                />
+                <Controller
+                  name='sale_price'
+                  control={control}
+                  render={({ field }) => (
+                    <FormControl sx={{ width: '200px', color: '#fff', backgroundColor: '#323259' }} size='small' variant='outlined'>
+                      <FilledInput
+                        id="filled-adornment-amount"
+                        size='small'
+                        type='number'
+                        startAdornment={<InputAdornment position='end'>$</InputAdornment>}
+                        {...field}
+                      />
+                    </FormControl>
+                  )}
+                />
+              </Box> : null} 
           </div>
 
           <div style={{ marginTop: '20px'}}>
@@ -564,29 +623,92 @@ export default function AddProductPage() {
               control={control}
               render={({ field }) => (
                 <FormControl sx={{ color: '#fff', backgroundColor: '#323259' }} fullWidth size='small' variant='outlined'>
-                  <InputLabel htmlFor="filled-adornment-amount">Money</InputLabel>
                   <FilledInput
                     id="filled-adornment-amount"
                     size='small'
                     type='number'
                     startAdornment={<InputAdornment position="start">$</InputAdornment>}
-                    {...field}
+                    value={field.value}
+                    onChange={(e) => field.onChange(e)}
                   />
                 </FormControl>
               )}
             />
-          </div>
+          </div> 
 
+          {shippingList.map((item, index: number) => (
+            <div className="input-item" key={index}>
+              <p className='label-name'>{item.zone_name}</p>
+              <Box ml={-8} sx={{ display: 'flex', alignItems: 'center' }}>
+                <Controller
+                  name='shipping_to_zones'
+                  control={control}
+                  render={({ field }) => (
+                    <FormControl sx={{ color: '#fff', backgroundColor: '#323259', width: '250px' }} fullWidth size='small' variant='outlined'>
+                      <FilledInput
+                        id="shipping-zones"
+                        type='number'
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value, index)}
+                        startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                      />
+                    </FormControl>
+                  )}
+                />
+                <Button
+                  variant='outlined'
+                  color='error'
+                  size='small'
+                  sx={{ width: '100px', fontSize: '10px', marginLeft: '50px' }}
+                  onClick={() => handleRemoveShipping(index)}
+                >
+                  remove
+                </Button>
+              </Box>
+            </div>
+          ))}
+          
           <div className="input-item">
-            <p className='label-name'>Add Shipping Location</p>
-            <SelectField
-              name='zone'
-              label='Select new zone'
+            <p className='label-name'></p>
+            <Controller
+              name='shipping_to_zones'
               control={control}
-              options={[{ id: 'used', name: 'Used' }]}
-              style={{ color: '#fff', backgroundColor: '#323259' }}
-            />
+              render={({ field }) => {
+                return (
+                  <Box ml={-8} sx={{ display: 'flex', alignItems: 'center' }}>
+                    <FormControl size='small' sx={{ color: '#fff', backgroundColor: '#323259', width: '250px' }}>
+                      <MuiSelect
+                        value={field.value}
+                        onChange={(e) => field.onChange(e)}
+                        inputProps={{ 'aria-label': 'Without label' }}
+                        sx={{ color: '#fff' }}
+                        placeholder='Select new zone'
+                      >
+                        {shippings.map((item) => (
+                          <MenuItem
+                            key={item.id}
+                            value={item.id}
+                            onClick={() => setShippingItem({ id: item.id, zone_name: item.name, price: 0.00 })}
+                          >
+                            {item.name}
+                          </MenuItem>
+                        ))}
+                      </MuiSelect>
+                    </FormControl>
+                    <Button
+                      variant='outlined'
+                      color='success'
+                      size='small'
+                      sx={{ width: '150px', fontSize: '10px', marginLeft: '20px' }}
+                      onClick={() => handleAddShipping(shippingItem as IShipping)}
+                    >
+                      Add shipping location
+                    </Button>
+                  </Box>
+                )}}
+              />
           </div>
+          
         </Box>
       </Box>
       {/* marketing */}
@@ -600,7 +722,7 @@ export default function AddProductPage() {
         }}
       ></div>
       <Box my={2}>
-        <Typography my={2} variant='h5' sx={{ color: '#fff' }} >Shipping</Typography>
+        <Typography my={2} variant='h5' sx={{ color: '#fff' }} >Marketing</Typography>
         <Box sx={{ width: '600px', marginLeft: '100px' }}>
           <div className="input-item">
             <p className='label-name'>Open Graph meta tags</p>

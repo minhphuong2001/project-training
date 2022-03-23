@@ -37,6 +37,7 @@ interface ProductTableProps {
     products: IProductData[];
     onDelete: (id: any) => void;
     onUpdate: (index: number, values: IProductData) => void;
+    onExportFile: (dataApi: any, fileName: string) => void;
 }
 
 const useSortTableData = (items: any, config = null) => {
@@ -46,10 +47,10 @@ const useSortTableData = (items: any, config = null) => {
         const sortableItems = [...items];
         if (sortConfig !== null) {
             sortableItems.sort((a, b) => {
-                if (a[sortConfig?.key] < b[sortConfig?.key]) {
+                if (a[sortConfig.key] < b[sortConfig.key]) {
                     return sortConfig?.direction === 'ascending' ? -1 : 1;
                 }
-                if (a[sortConfig?.key] > b[sortConfig?.key]) {
+                if (a[sortConfig.key] > b[sortConfig.key]) {
                     return sortConfig?.direction === 'ascending' ? 1 : -1;
                 }
                 return 0;
@@ -61,7 +62,7 @@ const useSortTableData = (items: any, config = null) => {
 
     const requestSort = (key: string) => {
         let direction = 'ascending';
-        if (sortConfig && sortConfig?.key === key && sortConfig?.direction === 'ascending') {
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
             direction = 'descending';
         }
         setSortConfig({ key, direction });
@@ -72,7 +73,7 @@ const useSortTableData = (items: any, config = null) => {
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
-function ProductTable({ products, onDelete, onUpdate }: ProductTableProps) {
+function ProductTable({ products, onDelete, onUpdate, onExportFile }: ProductTableProps) {
     const dispatch = useDispatch<ThunkDispatch<AppState, null, Action<string>>>();
     const [rowsPerPage, setRowsPerPage] = useState('25');
     const [showUpdateDialog, setShowUpdateDialog] = useState(false);
@@ -232,7 +233,8 @@ function ProductTable({ products, onDelete, onUpdate }: ProductTableProps) {
                                                 onClick={() => requestSort('arrivalDate')}
                                                 className={getClassName('arrivalDate')}
                                             >
-                                                Arrival date</TableCell>
+                                                Arrival date
+                                            </TableCell>
                                             <TableCell align='right' sx={{width: '150px', fontWeight: 600 }}></TableCell>
                                         </TableRow>
                                     </TableHead>
@@ -261,7 +263,7 @@ function ProductTable({ products, onDelete, onUpdate }: ProductTableProps) {
                                                             onChange={handleClickCheckbox}
                                                             onClick={() => {
                                                                 setActiveIndex(index);
-                                                                setIsExported(!isExported)
+                                                                setIsExported(!isExported);
                                                             }}
                                                         />
                                                         |
@@ -423,7 +425,11 @@ function ProductTable({ products, onDelete, onUpdate }: ProductTableProps) {
                             >
                                 {!isRemove ? 'save changes' : 'remove selected'}
                             </Button>
-                            <Button variant='contained' color='warning' sx={{ marginLeft: '20px' }}>
+                            <Button
+                                variant='contained'
+                                color='warning' sx={{ marginLeft: '20px' }}
+                                onClick={() => onExportFile(products, "list-product-data-file")}
+                            >
                                 {!isExported ? 'export all: csv' : 'export selected: csv'}
                             </Button>
                         </Box>

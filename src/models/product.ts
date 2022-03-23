@@ -77,7 +77,6 @@ export interface IImage {
     file: string;
     thumbs: Array<string>;
 }
-
 export interface IProductFilter {
     search: string;
     category: string;

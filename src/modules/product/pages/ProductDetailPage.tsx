@@ -62,12 +62,12 @@ export default function ProductDetailPage() {
                 description: data.description,
                 enabled: 1,
                 memberships: data.memberships,
-                shipping_to_zones: data.shipping.map((value: any) => {
+                shipping_to_zones: [...data.shipping].map((value: any) => {
                     return {id: value.id, price: value.price}
                 }),
                 tax_exempt: data.tax_exempt,
                 price: data.price,
-                sale_price_type: '$',
+                sale_price_type: data.sale_price_type,
                 sale_price: data.sale_price,
                 arrival_date: data.arriveDate,
                 inventory_tracking: 0,
@@ -85,7 +85,7 @@ export default function ProductDetailPage() {
                 imagesOrder: data.imagesOrder,
                 deleted_images: []
             }
-            console.log('values: ',values.imagesOrder);
+            console.log('values: ', values);
 
             const formData = new FormData();
             formData.append('productDetail', JSON.stringify(values));
@@ -96,7 +96,7 @@ export default function ProductDetailPage() {
                     Authorization: Cookies.get(ACCESS_TOKEN_KEY) || '',
                 }
             });
-            // setIsLoading(false);
+            setIsLoading(false);
 
             if (response.data?.success === true) {
                 const productId = response.data?.data;
