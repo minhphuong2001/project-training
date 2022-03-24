@@ -1,10 +1,9 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
     Button,
     Collapse,
     FormControl,
     FormControlLabel,
-    FormLabel,
     Grid,
     InputLabel,
     MenuItem,
@@ -23,7 +22,24 @@ import { useForm, Controller } from 'react-hook-form';
 import { KeyboardDoubleArrowDownRounded, KeyboardDoubleArrowUpRounded } from '@mui/icons-material';
 import { DateRange, DateRangePicker, LocalizationProvider } from '@mui/lab';
 import AdapterMomentFns from '@mui/lab/AdapterMoment';
-import { IUserFilter } from '../../../models/user';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppState } from '../../../redux/reducer';
+import { IStateData } from '../../../models/commonData'
+import { ThunkDispatch } from 'redux-thunk';
+import { Action } from 'typesafe-actions';
+import { fetchThunk } from '../../common/redux/thunk';
+import { API_PATHS } from '../../../configs/api';
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
 
 const membershipsOptions = [
     { id: 'M_4', name: 'General(Memberships)' },
@@ -45,16 +61,9 @@ export interface UserSearchProps {
     userRole: any;
     onSearch: (data: any) => void;
 }
-
-const initialValues = {
-    search: '',
-    memberships: [],
-    types: [],
-    status: [],
-    country: '',
-    state: '',
-    address: '',
-    phone: ''
+interface IFilter {
+    date_range: DateRange<Date>;
+    date_type: string;
 }
 
 const CustomButton = styled(Button)({
@@ -62,24 +71,30 @@ const CustomButton = styled(Button)({
 })
 
 export default function UserSearch({ userRole, onSearch }: UserSearchProps) {
+    const { countries } = useSelector((state: AppState) => state.commonData);
+    const [countryCode, setCountryCode] = useState<string>('');
     const [isOpenFilter, setIsOpenFilter] = useState(false);
-    const [filter, setFilter] = useState<IUserFilter>({
-        search: '',
-        memberships: [],
-        types: [],
-        status: '',
-        country: '',
-        state: '',
-        address: '',
-        phone: '',
+    const [stateList, setStateList] = useState<IStateData[]>([]);
+    const dispatch = useDispatch<ThunkDispatch<AppState, null, Action<string>>>();
+
+    const [filter, setFilter] = useState<IFilter>({
         date_range: [null, null],
-        date_type: 'R',
-        sort: '',
-        order_by: 'DESC',
-        tz: 7,
+        date_type: 'R'
     });
-    const { control, handleSubmit } = useForm({
-        defaultValues: initialValues,
+
+    const { control, handleSubmit, setValue } = useForm({
+        defaultValues: {
+            search: '',
+            memberships: [],
+            types: [],
+            status: [],
+            country: '',
+            state: '',
+            address: '',
+            phone: '',
+            date_type: '',
+            date_range: []
+        },
     });
 
     const handleDateTypeChange = (e: any) => {
@@ -89,6 +104,26 @@ export default function UserSearch({ userRole, onSearch }: UserSearchProps) {
     const handleDateRangeChange = (newValue: DateRange<Date | null>) => {
         setFilter({ ...filter, date_range: newValue });
     };
+
+    useEffect(() => {
+        const getStateList = async () => {
+            const response = await dispatch(fetchThunk(API_PATHS.state, 'post', { code: countryCode }));
+
+            if (response?.success === true) {
+                setStateList(response?.data);
+            }
+        }
+        getStateList();
+    }, [dispatch, countryCode])
+
+    const stateOptions = stateList && stateList.map(state => {
+        return { id: state.state, name: state.state }
+    })
+
+    useEffect(() => {
+        setValue('date_type', filter.date_type);
+        setValue('date_range', filter.date_range as any);
+    }, [setValue, filter])
 
     const handleSearch = (data: any) => {
         onSearch(data);
@@ -223,26 +258,50 @@ export default function UserSearch({ userRole, onSearch }: UserSearchProps) {
                             <Grid item md={4} sx={{ display: 'flex', flexDirection: 'column', ml: 2 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                     <Typography  sx={{ width: '100px' }} variant='body1'>Country</Typography>
-                                    <SelectField
+                                    <Controller
                                         name='country'
-                                        label='Country'
                                         control={control}
-                                        options={statusOption}
+                                        render={({ field }) => (
+                                            <MuiSelect
+                                                size='small'
+                                                sx={{ width: '100%' }}
+                                                value={field.value}
+                                                onChange={(e) => {
+                                                    field.onChange(e);
+                                                    setCountryCode(e.target.value as string)
+                                                }}
+                                                MenuProps={MenuProps}
+                                            >
+                                                <MenuItem value="">None</MenuItem>
+                                                {countries.map((item) => (
+                                                    <MenuItem key={item.country} value={item.code}>
+                                                        {item.country}
+                                                    </MenuItem>
+                                                ))}
+                                            </MuiSelect>
+                                        )}
                                     />
                                 </Box>
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <Typography  sx={{ width: '100px' }} variant='body1'>State</Typography>
-                                    <SelectField
-                                        name='state'
-                                        label='State'
-                                        control={control}
-                                        options={statusOption}
-                                    />
+                                    <Typography sx={{ width: '100px' }} variant='body1'>State</Typography>
+                                    {stateList && stateList.length > 0 ? (
+                                        <SelectField
+                                            name='state'
+                                            label='State'
+                                            control={control}
+                                            options={stateOptions}
+                                        />
+                                    ) : (<InputField
+                                            name='state'
+                                            label='State'
+                                            control={control}
+                                    />)
+                                    }
                                 </Box>
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                     <Typography sx={{ width: '100px' }} variant='body1'>Address</Typography>
                                     <InputField
-                                        name='sddress'
+                                        name='address'
                                         label='Address'
                                         control={control}
                                     />
@@ -256,10 +315,10 @@ export default function UserSearch({ userRole, onSearch }: UserSearchProps) {
                                     />
                                 </Box>
                             </Grid>
-                            <Grid item md={4} ml={6}>
-                                <FormControl size="small" fullWidth sx={{ paddingBottom: 1 }}>
-                                    <Typography sx={{ mt: 2 }} variant='body1'>User activity</Typography>
-                                    <RadioGroup row name="user-activity" value={filter.date_type} onChange={handleDateTypeChange}>
+                            <Grid item md={4} ml={8}>
+                                <Box pb={2} sx={{ display: 'flex' }}>
+                                    <Typography sx={{ mt: 2, mr: 4 }} variant='body1'>User activity</Typography>
+                                    <RadioGroup sx={{ mt: 1 }} row name="user-activity" value={filter.date_type} onChange={handleDateTypeChange}>
                                         <FormControlLabel
                                             value="R"
                                             control={ <Radio size='small'/>}
@@ -271,30 +330,28 @@ export default function UserSearch({ userRole, onSearch }: UserSearchProps) {
                                             label="Last logged in"
                                         />
                                     </RadioGroup>
-                                </FormControl>
+                                </Box>
                                 <LocalizationProvider dateAdapter={AdapterMomentFns}>
                                     <DateRangePicker
                                         disableFuture
                                         value={filter.date_range}
                                         onChange={handleDateRangeChange}
+                                        inputFormat='YYYY-MM-DD'
                                         mask="____-__-__"
-                                        inputFormat="yyyy-MM-dd"
                                         renderInput={(startProps, endProps) => (
-                                            <>
-                                                <Box width={1} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                    <TextField autoComplete="off" size="small" fullWidth {...startProps} />
-                                                    <Box sx={{ mx: 2, color: '#fff' }}> to </Box>
-                                                    <TextField autoComplete="off" size="small" fullWidth {...endProps} />
-                                                    <Button
-                                                        sx={{ marginLeft: 2 }}
-                                                        variant="contained"
-                                                        color="secondary"
-                                                        onClick={(e) => setFilter({ ...filter, date_range: [null, null] })}
-                                                    >
-                                                        Clear
-                                                    </Button>
-                                                </Box>
-                                            </>
+                                            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                <TextField autoComplete="off" size="small" fullWidth {...startProps} />
+                                                <Typography mx={2}> to </Typography>
+                                                <TextField autoComplete="off" size="small" fullWidth {...endProps} />
+                                                <Button
+                                                    sx={{ marginLeft: 2 }}
+                                                    variant="contained"
+                                                    color="secondary"
+                                                    onClick={(e) => setFilter({ ...filter, date_range: [null, null] })}
+                                                >
+                                                    Clear
+                                                </Button>
+                                            </Box>
                                         )}
                                     />
                                 </LocalizationProvider>

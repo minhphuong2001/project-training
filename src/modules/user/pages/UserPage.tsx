@@ -13,6 +13,7 @@ import { IUserData } from '../../../models/user'
 import { toast, ToastContainer } from 'react-toastify'
 import { useHistory } from 'react-router';
 import { ROUTES } from '../../../configs/routes'
+import { setCountries } from '../../common/redux/commonReducer';
 
 export default function UserPage() {
     const history = useHistory();
@@ -31,10 +32,6 @@ export default function UserPage() {
     }, [dispatch])
 
     useEffect(() => {
-        getUserList();
-    }, [getUserList])
-
-    useEffect(() => {
         const getUserRole = async () => {
             setIsLoading(true);
             const response = await dispatch(fetchThunk(`${API_PATHS.userRole}`, 'get'));
@@ -45,6 +42,19 @@ export default function UserPage() {
 
         getUserRole();
     }, [dispatch])
+
+    const getCountryList = useCallback(async () => {
+        setIsLoading(true);
+        const response = await dispatch(fetchThunk(API_PATHS.countries, 'post'));
+
+        setIsLoading(false);
+        dispatch(setCountries(response?.data));
+    }, [dispatch])
+
+    useEffect(() => {
+        getUserList();
+        getCountryList();
+    }, [getUserList, getCountryList])
 
     const handleDeleteUser = async (id: any) => {
         try {
@@ -61,10 +71,19 @@ export default function UserPage() {
 
     const handleSearchUser = async (data: any) => {
         const values = {
-            search: data?.search,
-            memberships: data?.memberships,
-            types: data?.types,
-            status: data?.status
+            search: data.search,
+            memberships: data.memberships,
+            types: data.types,
+            status: data.status,
+            country: data.country,
+            state: data.state,
+            address: data.address,
+            phone: data.phone,
+            date_type: data.date_type,
+            date_range: data.date_range,
+            tz: 7,
+            page: 1,
+            count: 25
         }
 
         try {
@@ -93,7 +112,10 @@ export default function UserPage() {
             </Typography>
             
             {/* search product */}
-            <UserSearch userRole={userRole} onSearch={handleSearchUser}/>
+            <UserSearch
+                userRole={userRole}
+                onSearch={handleSearchUser}
+            />
 
             <Button
                 variant='contained'

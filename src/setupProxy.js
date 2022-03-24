@@ -2,7 +2,7 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const router = {
-  '/api': 'https://api.gearfocus.div4.pgtest.co/api',
+  '/api': 'https://api.gearfocus.div4.pgtest.co',
 };
 
 // eslint-disable-next-line no-undef
@@ -10,7 +10,7 @@ module.exports = function (app) {
   app.use(
     '/api',
     createProxyMiddleware({
-      target: 'https://api.gearfocus.div4.pgtest.co/api',
+      target: 'https://api.gearfocus.div4.pgtest.co',
       changeOrigin: true,
       secure: false,
       pathRewrite: {
