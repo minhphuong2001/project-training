@@ -40,10 +40,10 @@ import { FileUploader } from 'react-drag-drop-files';
 export interface ProductDetailProps {
     product: IProductDetail;
     brand: IBrandData[];
-    onUpdateProduct: (data: any, files: Array<File>) => void;
+    onUpdateProduct: (data: any, files: File[]) => void;
 }
 
-const fileTypes = ['JPG', 'PNG', 'GIF', 'JPEG'];
+const fileTypes = ['JPG', 'PNG', 'JPEG'];
 interface IFileImage {
   file: File;
   base64Src: string;
@@ -133,17 +133,13 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
 
     const addFile = useCallback(async (file: File) => {
         const base64String = await fileToBase64String(file);
-        const fileArray = [...files].find((item) => item.base64Src === base64String);
-        if (fileArray) {
-            return;
-        }
         setFiles((prev) => {
             const newFiles = [...prev].filter(item => item.base64Src !== base64String);
             newFiles.push({ file, base64Src: base64String });
             return newFiles;
         })
-    }, [files]);
-
+    }, []);
+    
     const removeFile = (base64Src: string) => {
         setFiles((prev) => {
             const newFiles = [...prev].filter((item) => item.base64Src !== base64Src);
@@ -154,10 +150,6 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
     const handleAddFiles = (files: FileList) => {
         Array.from(files).map((file) => addFile(file));
     }
-
-    const isDeletedImage = (id: string) => {
-        return [...getValues("deleted_images")].some((item) => item === id);
-    }
     
     const handleRemoveImage = useCallback((id: string) => {
         const image = [...product?.images].find((item) => item.id === id);
@@ -165,9 +157,7 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
             return;
         }
         const newImagesOrder = [...getValues("imagesOrder")].filter((item) => item !== image.file);
-        const newDeletedImage = [...getValues("deleted_images"), id];
 
-        setValue('deleted_images', newDeletedImage as never[]);
         setValue('imagesOrder', newImagesOrder);
     }, [setValue, getValues, product?.images])
 
@@ -180,17 +170,12 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
     const brandOptions: any = brand.map(function (item) {
         return { value: item?.id, label: item?.name }
     })
-
-    const onSubmit = (data: any) => {
-        onUpdateProduct(data, files.map((item) => item.file));
-    }
-
-    const newImagesOrder = product?.images.map(item => item.file).concat(files.map(item => item.file.name));
-
     const shippingZonesValue = shippingList.map(item => {
         return { id: item.id, zone_name: item.zone_name, price: 0.00 }
     })
 
+    const newImagesOrder = product?.images.map(item => item.file).concat(files.map(item => item.file.name));
+    console.log(files)
     useEffect(() => {
         setValue('vendor_id', product?.vendor_id);
         setValue('name', product?.name);
@@ -209,6 +194,10 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
         setValue('imagesOrder', newImagesOrder as never[]);
         setValue('sale_price_type', product?.sale_price_type);
     }, [product, setValue, cateValueOptions, brandValueOptions, shippingValues, newImagesOrder, shippingZonesValue])
+
+    const onSubmit = (data: any) => {
+        onUpdateProduct(data, files.map((item) => item.file));
+    }
 
     return (
         <div>
@@ -317,7 +306,6 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
                                     }}
                                 >
                                     {product?.images.map((item) => {
-                                        if (isDeletedImage(item.id)) return null;
                                         return (
                                             <Badge
                                                 key={item.file}

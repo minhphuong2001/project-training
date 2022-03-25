@@ -196,7 +196,7 @@ function ProductTable({ products, onDelete, onUpdate, onExportFile }: ProductTab
                                             </TableCell>
                                             <TableCell
                                                 align='left'
-                                                sx={{ fontWeight: 600, minWidth: '350px' }}
+                                                sx={{ fontWeight: 600, cursor: 'pointer', minWidth: '350px' }}
                                                 onClick={() => requestSort('name')}
                                                 className={getClassName('name')}
                                             >

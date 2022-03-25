@@ -31,8 +31,9 @@ export default function AddUserPage() {
             taxExempt: data?.taxExempt === false ? 0 : 1,
             forceChangePassword: data?.forceChangePassword === false ? 0 : 1,
         }
+        console.log(values);
         const response = await dispatch(fetchThunk(`${API_PATHS.userAdmin}/create`, 'post', values));
-
+        
         setIsLoading(false);
         if (response?.success === true) {
             toast.success('Create account successfully');
@@ -41,7 +42,7 @@ export default function AddUserPage() {
                 history.push(`${ROUTES.user}/manage-users`);
             }, 3500);
         } else {
-            toast.error('The email has been already existed');
+            toast.error('Field Type or Acess level or Membership is requied.');
         }
     }
 

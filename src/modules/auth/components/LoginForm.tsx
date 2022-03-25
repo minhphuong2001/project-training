@@ -34,7 +34,7 @@ export default function LoginForm() {
       .min(6, 'Mininum of 6 characters.')
   });
   
-  const { register, handleSubmit, formState: { errors } } = useForm<ILoginParams>(
+  const { register, handleSubmit, formState: { errors, isValid } } = useForm<ILoginParams>(
     {
       mode: 'all',
       resolver: yupResolver(validationSchema)
@@ -76,10 +76,9 @@ export default function LoginForm() {
         {...register('password')}
         helperText={errors.password ? <FormHelperText error sx={{margin: '8px 0'}}>{errors.password.message}</FormHelperText> : null}
       />
-      {
-        errorMessage ? <FormHelperText error sx={{ margin: '8px 0' }}>{errorMessage}</FormHelperText> : null
-      }
+      {errorMessage ? <FormHelperText error sx={{ margin: '8px 0' }}>{errorMessage}</FormHelperText> : null}
       <Button
+        disabled={!isValid}
         variant='contained'
         startIcon={<Login />}
         fullWidth

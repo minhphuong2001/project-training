@@ -45,7 +45,7 @@ import { FileUploader } from 'react-drag-drop-files';
 import { fileToBase64String } from '../../../utils/common';
 import { IShipping } from '../../../models/product';
 
-const fileTypes = ['JPG', 'PNG', 'GIF', 'JPEG'];
+const fileTypes = ['JPG', 'PNG', 'JPEG'];
 interface IFileImage {
   file: File;
   base64Src: string;
@@ -92,16 +92,13 @@ export default function AddProductPage() {
 
   const addFile = useCallback(async (file: File) => {
     const base64String = await fileToBase64String(file);
-    const findFile = [...files].find((item) => item.base64Src === base64String);
-    if (findFile) {
-      return;
-    }
+   
     setFiles((prevFiles) => {
       const newFiles = [...prevFiles].filter((item) => item.base64Src !== base64String);
       newFiles.push({ file, base64Src: base64String });
       return newFiles;
     });
-  }, [files]);
+  }, []);
 
   const removeFile = useCallback((base64Src: string) => {
     setFiles((prevFiles) => {
@@ -110,8 +107,8 @@ export default function AddProductPage() {
     });
   }, []);
 
-  const handleAddFiles = (multiFile: FileList) => {
-    Array.from(multiFile).map((file) => addFile(file));
+  const handleAddFiles = (files: FileList) => {
+    Array.from(files).map((file) => addFile(file));
   };
 
   const handleAddShipping = (item: IShipping) => {
@@ -151,7 +148,7 @@ export default function AddProductPage() {
     }
   }
 
-  const options: any = vendors.slice(0, 100).map(function (vendor) {
+  const options: any = vendors.slice(0, 200).map(function (vendor) {
     return { value: vendor.id, label: vendor.name };
   })
     const categoryOptions: any = categories.map(function (cate) {
@@ -167,14 +164,14 @@ export default function AddProductPage() {
     formData.append('productId', productId);
     formData.append('order', order);
 
-    const response = await axios.post(API_PATHS.uploadImage, formData, {
+    const json = await axios.post(API_PATHS.uploadImage, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: Cookies.get(ACCESS_TOKEN_KEY) || '',
       }
     });
 
-    console.log('file: ', response.data);
+    console.log(json.data);
   }
 
   const onSubmit = async (data: any) => {
@@ -226,8 +223,9 @@ export default function AddProductPage() {
       if (response.data?.success === true) {
         const productId = response.data?.data;
         const file: File[] = files.map(item => item.file);
+        const index = file.length > 0 && file.length;
 
-        await Promise.all(file.map(async (file, index) => {
+        await Promise.all(file.map(async (file) => {
           await onUploadFile(file, productId, index.toString());
         }));
 
@@ -243,25 +241,6 @@ export default function AddProductPage() {
       console.log(error?.message);
     }
   }
-
-  // const handleAddShippingZone = (id: number) => {
-  //   if (!id) {
-  //     return;
-  //   }
-  //   const isShippingZone = [...getValues('shipping_to_zones')].some(item => item.id === id);
-  //   if (isShippingZone) {
-  //     return;
-  //   }
-  //   setValue('shipping_to_zones', [...getValues('shipping_to_zones'), { id, price: '0.00' }]);
-  // }
-
-  // const handleRemoveShippingZone = (id: number) => {
-  //   if (id === 1) {
-  //     return;
-  //   }
-  //   const newShippingZones = [...getValues('shipping_to_zones')].filter((item) => item.id !== id);
-  //   setValue('shipping_to_zones', newShippingZones);
-  // };
 
   useEffect(() => {
     setValue('imagesOrder', [...files].map(file => file.file.name) as never[]);

@@ -41,17 +41,18 @@ export default function ProductDetailPage() {
         formData.append('productId', productId);
         formData.append('order', order);
 
-        await axios.post(API_PATHS.uploadImage, formData, {
+        const json = await axios.post(API_PATHS.uploadImage, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 Authorization: Cookies.get(ACCESS_TOKEN_KEY) || '',
             }
         });
+        console.log(json.data)
     }
 
-    const handleUpdateProduct = async (data: any, files: Array<File>) => {
+    const handleUpdateProduct = async (data: any, files: File[]) => {
         try {
-            // setIsLoading(true);
+            setIsLoading(true);
             const values = {
                 id: id,
                 vendor_id: data.vendor_id,
@@ -100,11 +101,12 @@ export default function ProductDetailPage() {
 
             if (response.data?.success === true) {
                 const productId = response.data?.data;
-
-                await Promise.all(files.map(async (file, index) => {
+                const index = files.length > 0 && files.length;
+                await Promise.all(files.map(async (file) => {
                     await onUploadFile(file, productId, index.toString());
                 }));
 
+                getProductDetail();
                 toast.success('Update product successfully');
             } else {
                 toast.error(response.data?.errors ? response.data?.errors : 'Something went wrong.');

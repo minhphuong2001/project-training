@@ -8,7 +8,7 @@ import { AppState } from '../../../redux/reducer';
 import { Action } from 'typesafe-actions';
 import { fetchThunk } from '../../common/redux/thunk';
 import { API_PATHS } from '../../../configs/api';
-import { IProductData, IProductFilter } from '../../../models/product';
+import { IProductData } from '../../../models/product';
 import { setProductData } from '../redux/productReducer';
 import { useHistory } from 'react-router';
 import { setCategoryData } from '../redux/categoryReducer';

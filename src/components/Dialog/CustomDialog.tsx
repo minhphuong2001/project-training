@@ -16,13 +16,19 @@ interface CustomDialogProps {
 export function CustomDialog({ title, open, content, actions }: CustomDialogProps) {
     
   return (
-      <Dialog
-        open={open}
-        PaperProps={{ style: { backgroundColor: '#323259', padding: '15px', color: '#fff' } }}
-      >
-        <DialogTitle>{title}</DialogTitle>
-        <DialogContent>{content}</DialogContent>
-        <DialogActions>{actions}</DialogActions>
-      </Dialog>
+    <Dialog
+      open={open}
+      PaperProps={{
+        style: {
+          backgroundColor: '#323259',
+          color: '#fff',
+          padding: '10px',
+        }
+      }}
+    >
+      <DialogTitle sx={{ borderBottom: '1px solid #1b1b38'}}>{title}</DialogTitle>
+      <DialogContent sx={{ borderBottom: '1px solid #1b1b38', margin: '10px 0'}}>{content}</DialogContent>
+      <DialogActions>{actions}</DialogActions>
+    </Dialog>
   )
 }

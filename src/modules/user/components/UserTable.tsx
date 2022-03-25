@@ -350,8 +350,8 @@ function UserTable({ users, onDelete }: UserTableProps) {
                         {isRemove ?
                             <CustomDialog
                                 open={showRemoveDialog}
-                                title='Confirm Delete Product'
-                                content={<Typography variant='body1'>Do you want to delete this product?</Typography>}
+                                title='Confirm Delete User'
+                                content={<Typography variant='body1'>Do you want to delete this user?</Typography>}
                                 actions={
                                     <Box width='100%' sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                         <Button

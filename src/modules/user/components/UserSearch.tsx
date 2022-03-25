@@ -14,6 +14,8 @@ import {
     styled,
     TextField,
     Typography,
+    Checkbox,
+    ListItemText
 } from '@mui/material'
 import InputField from '../../../components/FormField/InputField'
 import { SelectField } from '../../../components/FormField/SelectField';
@@ -29,6 +31,7 @@ import { ThunkDispatch } from 'redux-thunk';
 import { Action } from 'typesafe-actions';
 import { fetchThunk } from '../../common/redux/thunk';
 import { API_PATHS } from '../../../configs/api';
+import moment from 'moment';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -118,7 +121,11 @@ export default function UserSearch({ userRole, onSearch }: UserSearchProps) {
 
     const stateOptions = stateList && stateList.map(state => {
         return { id: state.state, name: state.state }
-    })
+    });
+
+    // const formatDate = filter.date_range.length > 1 && filter.date_range.map(item => {
+    //     return moment(item).format('YYYY-MM-DD');
+    // });
 
     useEffect(() => {
         setValue('date_type', filter.date_type);
@@ -146,12 +153,6 @@ export default function UserSearch({ userRole, onSearch }: UserSearchProps) {
                             />
                         </Grid>
                         <Grid item md={3}>
-                            {/* <SelectField
-                                name='memberships'
-                                label='All memberships'
-                                control={control}
-                                options={membershipsOptions}
-                            /> */}
                             <Controller
                                 name='memberships'
                                 control={control}
@@ -169,7 +170,8 @@ export default function UserSearch({ userRole, onSearch }: UserSearchProps) {
                                             >
                                                 {membershipsOptions.map((item) => (
                                                     <MenuItem key={item.id} value={item.id}>
-                                                        {item.name}
+                                                        <Checkbox checked={field.value.indexOf(item.id as never) > -1} />
+                                                        <ListItemText primary={item.name} />
                                                     </MenuItem>
                                                 ))}
                                             </MuiSelect>
@@ -343,14 +345,6 @@ export default function UserSearch({ userRole, onSearch }: UserSearchProps) {
                                                 <TextField autoComplete="off" size="small" fullWidth {...startProps} />
                                                 <Typography mx={2}> to </Typography>
                                                 <TextField autoComplete="off" size="small" fullWidth {...endProps} />
-                                                <Button
-                                                    sx={{ marginLeft: 2 }}
-                                                    variant="contained"
-                                                    color="secondary"
-                                                    onClick={(e) => setFilter({ ...filter, date_range: [null, null] })}
-                                                >
-                                                    Clear
-                                                </Button>
                                             </Box>
                                         )}
                                     />

@@ -29,7 +29,7 @@ export const API_PATHS = {
   productAdmin: `${getBaseUrl(APIService.admin)}/products`,
   brand: `${getBaseUrl(APIService.admin)}/brands`,
   shipping: `${getBaseUrl(APIService.admin)}/shipping/list`,
-  vendors: `${getBaseUrl(APIService.admin)}/vendors/list'`,
+  vendors: `${getBaseUrl(APIService.admin)}/vendors/list`,
   userRole: `${getBaseUrl(APIService.admin)}/commons/role`,
   countries: `${getBaseUrl(APIService.admin)}/commons/country`,
   state: `${getBaseUrl(APIService.admin)}/commons/state`,

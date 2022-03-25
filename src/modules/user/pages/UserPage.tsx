@@ -80,12 +80,13 @@ export default function UserPage() {
             address: data.address,
             phone: data.phone,
             date_type: data.date_type,
-            date_range: data.date_range,
-            tz: 7,
+            // date_range: data.date_range,
             page: 1,
-            count: 25
+            count: 25,
+            order_by: 'DESC',
+            tz: 7
         }
-
+        
         try {
             setIsLoading(true);
             const response = await dispatch(fetchThunk(`${API_PATHS.userAdmin}/list`, 'post', values));
