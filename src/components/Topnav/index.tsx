@@ -59,7 +59,9 @@ export default function Topnav({ toggle }: TopnavProps) {
                         alignItems: 'center',
                         marginLeft: 2
                     }}>
-                        <Typography variant='h4' sx={{ textTransform: 'capitalize'}}>gear focus admin</Typography>
+                        <Link to={`${ROUTES.product}/manage-products`} style={{ color: '#fff'}} >
+                            <Typography variant='h4' sx={{ textTransform: 'capitalize'}}>gear focus admin</Typography>
+                        </Link>
                         <NotificationsNoneSharp sx={{ fontSize: 20, marginLeft: '3px' }}/>
                     </Box> 
                 </Box>

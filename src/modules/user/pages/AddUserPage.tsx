@@ -42,7 +42,7 @@ export default function AddUserPage() {
                 history.push(`${ROUTES.user}/manage-users`);
             }, 3500);
         } else {
-            toast.error('Field Type or Acess level or Membership is requied.');
+            toast.error('Field Type or Acess level or Membership is required.');
         }
     }
 

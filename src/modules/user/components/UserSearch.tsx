@@ -31,7 +31,6 @@ import { ThunkDispatch } from 'redux-thunk';
 import { Action } from 'typesafe-actions';
 import { fetchThunk } from '../../common/redux/thunk';
 import { API_PATHS } from '../../../configs/api';
-import moment from 'moment';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;

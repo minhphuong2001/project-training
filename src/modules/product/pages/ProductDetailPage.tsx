@@ -37,7 +37,7 @@ export default function ProductDetailPage() {
 
     const onUploadFile = async (file: File, productId: string, order: string) => {
         const formData = new FormData();
-        formData.append('images', file);
+        formData.append('images[]', file);
         formData.append('productId', productId);
         formData.append('order', order);
 
@@ -52,7 +52,6 @@ export default function ProductDetailPage() {
 
     const handleUpdateProduct = async (data: any, files: File[]) => {
         try {
-            setIsLoading(true);
             const values = {
                 id: id,
                 vendor_id: data.vendor_id,
@@ -84,7 +83,7 @@ export default function ProductDetailPage() {
                 facebook_marketing_enabled: data.facebook_marketing_enabled === false ? 0 : 1,
                 google_feed_enabled: data.google_feed_enabled === false ? 0 : 1,
                 imagesOrder: data.imagesOrder,
-                deleted_images: []
+                deleted_images: data.deleted_images
             }
             console.log('values: ', values);
 
@@ -97,11 +96,11 @@ export default function ProductDetailPage() {
                     Authorization: Cookies.get(ACCESS_TOKEN_KEY) || '',
                 }
             });
-            setIsLoading(false);
 
             if (response.data?.success === true) {
                 const productId = response.data?.data;
                 const index = files.length > 0 && files.length;
+
                 await Promise.all(files.map(async (file) => {
                     await onUploadFile(file, productId, index.toString());
                 }));

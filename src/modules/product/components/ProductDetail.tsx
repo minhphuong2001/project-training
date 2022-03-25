@@ -23,7 +23,7 @@ import DatePicker from '@mui/lab/DatePicker';
 import '../components/product.scss'
 import { SelectField } from '../../../components/FormField/SelectField';
 import CustomToggle from '../../../components/FormField/CustomToggle/CustomToggle';
-import { IProductDetail, IShipping } from '../../../models/product';
+import { ICategory, IImage, IProductDetail, IShipping } from '../../../models/product';
 import { fileToBase64String, numberFormat } from '../../../utils/common';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppState } from '../../../redux/reducer';
@@ -49,7 +49,34 @@ interface IFileImage {
   base64Src: string;
 }
 
-const initialValues = {
+interface InitialValuesProps {
+    vendor_id: string,
+    name: string,
+    brand: string,
+    condition: string,
+    sku: string,
+    categories: ICategory[],
+    description: string,
+    memberships: string,
+    meta: string,
+    meta_description: string,
+    meta_keywords: string,
+    tax_exempt: number,
+    product_page_title: string,
+    quantity: string,
+    price: string,
+    sale_price: string,
+    sale_price_type: string,
+    arriveDate: number,
+    shipping: IShipping[],
+    shipping_to_zones: [],
+    facebook_marketing_enabled: boolean,
+    google_feed_enabled: boolean,
+    imagesOrder: IImage[],
+    deleted_images: []
+}
+
+const initialValues: InitialValuesProps = {
     vendor_id: '',
     name: '',
     brand: '',
@@ -67,15 +94,14 @@ const initialValues = {
     price: '',
     sale_price: '',
     sale_price_type: '',
-    arriveDate: new Date(),
+    arriveDate:25,
     shipping: [],
-    shipping_to_zones: [{id: '', name_zones: '', price: '0.00'}],
+    shipping_to_zones: [],
     facebook_marketing_enabled: false,
     google_feed_enabled: false,
     imagesOrder: [],
     deleted_images: []
 }
-
 
 function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) {  
     const dispatch = useDispatch<ThunkDispatch<AppState, null, Action<string>>>();
@@ -131,6 +157,7 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
         return {id: item.id, zone_name: item.zone_name, price: numberFormat(item.price)};
     })
 
+    // handle upload file
     const addFile = useCallback(async (file: File) => {
         const base64String = await fileToBase64String(file);
         setFiles((prev) => {
@@ -151,15 +178,14 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
         Array.from(files).map((file) => addFile(file));
     }
     
-    const handleRemoveImage = useCallback((id: string) => {
-        const image = [...product?.images].find((item) => item.id === id);
-        if (!image) {
-            return;
-        }
-        const newImagesOrder = [...getValues("imagesOrder")].filter((item) => item !== image.file);
+    const handleRemoveImage = (id: string) => {
+        const newImages = [...getValues("imagesOrder")].filter((item) => item.id !== id);
+        const newDeletedImages = [...getValues("deleted_images"), id];
 
-        setValue('imagesOrder', newImagesOrder);
-    }, [setValue, getValues, product?.images])
+        setValue('deleted_images', newDeletedImages as any);
+        setValue('imagesOrder', newImages as IImage[]);
+    }
+
 
     const categoryOptions: any = categories.map(function (cate) {
         return { value: cate.id, label: cate.name }
@@ -173,9 +199,7 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
     const shippingZonesValue = shippingList.map(item => {
         return { id: item.id, zone_name: item.zone_name, price: 0.00 }
     })
-
-    const newImagesOrder = product?.images.map(item => item.file).concat(files.map(item => item.file.name));
-    console.log(files)
+    
     useEffect(() => {
         setValue('vendor_id', product?.vendor_id);
         setValue('name', product?.name);
@@ -184,16 +208,16 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
         setValue('price', String(product?.price));
         setValue('quantity', String(product?.quantity));
         setValue('sale_price', numberFormat(product?.sale_price));
+        setValue('sale_price_type', product?.sale_price_type);
         setValue('description', product?.description);
         setValue('categories', cateValueOptions);
         setValue('brand', brandValueOptions);
         setValue('meta_keywords', product?.meta_keywords);
         setValue('product_page_title', product?.product_page_title);
         setValue('shipping', shippingValues);
-        setValue('shipping_to_zones', shippingZonesValue as never[]);
-        setValue('imagesOrder', newImagesOrder as never[]);
-        setValue('sale_price_type', product?.sale_price_type);
-    }, [product, setValue, cateValueOptions, brandValueOptions, shippingValues, newImagesOrder, shippingZonesValue])
+        setValue('shipping_to_zones', []);
+        setValue('imagesOrder', product?.images);
+    }, [product, setValue, cateValueOptions, brandValueOptions, shippingValues, shippingZonesValue])
 
     const onSubmit = (data: any) => {
         onUpdateProduct(data, files.map((item) => item.file));
@@ -305,10 +329,10 @@ function ProductDetail({ product, brand, onUpdateProduct }: ProductDetailProps) 
                                         marginTop: '10px'
                                     }}
                                 >
-                                    {product?.images.map((item) => {
+                                    {field.value.length > 0 && field.value.map((item: IImage, index) => {
                                         return (
                                             <Badge
-                                                key={item.file}
+                                                key={index}
                                                 anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                                                 sx={{ mr: 2 }}
                                                 badgeContent={

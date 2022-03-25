@@ -29,6 +29,7 @@ export default function ProductPage() {
     const { products } = useSelector((state: AppState) => state.product);
     const [productList, setProductList] = useState<IProductData[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    
     const getProductList = useCallback(async () => {
         setIsLoading(true);
         const response = await dispatch(fetchThunk(API_PATHS.productList, 'post'));
@@ -123,7 +124,6 @@ export default function ProductPage() {
             await dispatch(fetchThunk(`${API_PATHS.productAdmin}/edit`, 'post', { params: [{ id: id, delete: 1 }] }));
 
             setIsLoading(false);
-            // setProductList([...products.data.filter(a => a.id !== id)]);
             getProductList();
             toast.success('Delete successfully');
         } catch (error: any) {
@@ -136,13 +136,13 @@ export default function ProductPage() {
             setIsLoading(true);
             const formData = new FormData();
             formData.append('productDetail', `${JSON.stringify({
-                // id: values.id,
+                id: values.id,
                 vendor_id: values.vendorID,
                 name: values.name,
                 quantity: values.amount,
                 price: values.price,
             })}`);
-
+            
             const response = await axios.post(`${API_PATHS.productAdmin}/create`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',

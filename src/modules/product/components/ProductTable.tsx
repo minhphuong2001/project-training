@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -287,7 +287,7 @@ function ProductTable({ products, onDelete, onUpdate, onExportFile }: ProductTab
                                                         }}
                                                     >
                                                         <Link to={`${ROUTES.product}/product-detail/${item.id}`} style={{ color: '#007bff' }}>
-                                                            {item.name}
+                                                            <span className='three-dots'>{item.name}</span>
                                                         </Link>
                                                     </TableCell>
                                                     <TableCell align='left'>{item.category}</TableCell>

@@ -9,7 +9,6 @@ import {
   FormControlLabel,
   Checkbox,
   FormControl,
-  InputLabel,
   InputAdornment,
   FilledInput,
   TextField,
@@ -18,8 +17,6 @@ import {
   CardMedia,
   Select as MuiSelect,
   MenuItem,
-  Grid,
-  Autocomplete
 } from '@mui/material';
 import { ArrowBack, Close } from '@mui/icons-material';
 import AdapterMomentFns from '@mui/lab/AdapterMoment';
@@ -160,7 +157,7 @@ export default function AddProductPage() {
 
   const onUploadFile = async (file: File, productId: string, order: string) => {
     const formData = new FormData();
-    formData.append('images', file);
+    formData.append('images[]', file);
     formData.append('productId', productId);
     formData.append('order', order);
 
@@ -209,7 +206,7 @@ export default function AddProductPage() {
         imagesOrder: [...files].map(file => file.file.name),
         deleted_images: []
       }
-      console.log(values);
+      // console.log(values);
       formData.append('productDetail', JSON.stringify(values));
       const response = await axios.post(`${API_PATHS.productAdmin}/create`, formData, {
         headers: {
